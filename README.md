@@ -20,7 +20,7 @@ Free a stuck port, reclaim gigabytes of disk, read memory honestly, and turn you
 [![Go 1.27](https://img.shields.io/badge/Go-1.27-334155?style=flat-square)](https://go.dev/)
 [![Linux · macOS](https://img.shields.io/badge/Linux%20%C2%B7%20macOS-supported-8B5CF6?style=flat-square)](#-install)
 [![bash · zsh · fish](https://img.shields.io/badge/bash%20%C2%B7%20zsh%20%C2%B7%20fish-integrated-334155?style=flat-square)](docs/commands.md#shell-shortcuts)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-%2B%20gitmoji-8B5CF6?style=flat-square)](.github/CONTRIBUTING.md#%EF%B8%8F-commit-messages)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-%2B%20gitmoji-8B5CF6?style=flat-square)](.github/CONTRIBUTING.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-334155?style=flat-square)](LICENSE)
 
 [Install](#-install) · [Quick tour](#-quick-tour) · [Power-user handbook](docs/guides/power-user.md) · [Safety](docs/safety.md) · [Docs](docs/README.md) · [Contribute](.github/CONTRIBUTING.md)

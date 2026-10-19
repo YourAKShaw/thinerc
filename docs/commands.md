@@ -30,7 +30,7 @@ Every verb, its flags, and what it returns. Run `thine <command> --help` for the
 | `nuke-nm` | `thine nm reset` |
 | your recipe aliases (`gpa`, `treen`…) | `thine run <recipe> -- …` |
 
-Customise with `[shortcuts] disable`, `rename` and `force` in your [config](configuration.md#shortcuts).
+Customise with `[shortcuts] disable`, `rename` and `force` in your [config](configuration.md#the-global-file-annotated).
 
 ---
 
