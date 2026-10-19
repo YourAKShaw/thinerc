@@ -15,9 +15,11 @@ Releases are cut from `main` by pushing a `vX.Y.Z` tag. [`release.yml`](../.gith
 4. Commit (`chore(release): 🔖 release vX.Y.Z` with a filled body and footers), then:
 
    ```sh
-   git tag -s vX.Y.Z -m "thine vX.Y.Z"
+   git tag -a vX.Y.Z -m "thine vX.Y.Z"    # -s instead of -a if you have a signing key
    git push origin vX.Y.Z
    ```
+
+   **Never move or reuse a pushed tag.** The Go module proxy caches a version the first time anyone requests it, and the checksum database makes that permanent. A tag pointing somewhere new breaks `go install …@vX.Y.Z` with a checksum mismatch. If the pipeline fails, fix it on `main` and release the next patch version.
 
 ## What the pipeline does
 
