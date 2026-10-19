@@ -135,8 +135,8 @@ func to16(c RGB) int {
 
 // Style is an immutable text style. The zero value renders text unchanged.
 type Style struct {
-	fg, bg                              *RGB
-	bold, dim, italic, underline, blink bool
+	fg, bg                       *RGB
+	bold, dim, italic, underline bool
 }
 
 // S starts a new style.

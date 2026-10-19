@@ -294,11 +294,3 @@ func parsePorts(args []string) ([]int, error) {
 	sort.Ints(out)
 	return out, nil
 }
-
-// waitCtx is a short-lived context for read paths.
-func waitCtx(parent context.Context, d time.Duration) (context.Context, context.CancelFunc) {
-	if parent == nil {
-		parent = context.Background()
-	}
-	return context.WithTimeout(parent, d)
-}
