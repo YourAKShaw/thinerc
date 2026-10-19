@@ -147,6 +147,7 @@ func TestKillFreesPortAndEscalates(t *testing.T) {
 	startListener(t, p, "ignore-term")
 	out, code := run(t, nil, "kill", strconv.Itoa(p), "--grace", "300ms", "--json")
 	var v struct {
+		Code    int   `json:"exit_code"`
 		Free    []int `json:"ports_free"`
 		Targets []struct {
 			Tier, Result, Signal string
@@ -165,6 +166,9 @@ func TestKillFreesPortAndEscalates(t *testing.T) {
 	out, code = run(t, nil, "--config", cfg, "kill", "--group", "t", "--grace", "300ms", "--json")
 	if err := json.Unmarshal([]byte(out), &v); err != nil {
 		t.Fatalf("bad json (%v): %s", err, out)
+	}
+	if code != v.Code {
+		t.Errorf("process exit %d disagrees with JSON exit_code %d", code, v.Code)
 	}
 	if code != 0 || len(v.Free) != 1 || len(v.Targets) != 1 || v.Targets[0].Signal != "KILL" || v.Targets[0].Tier != "dev" {
 		t.Fatalf("group port should be dev-tier and escalated; code %d\n%s", code, out)
