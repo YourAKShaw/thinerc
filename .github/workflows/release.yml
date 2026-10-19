@@ -131,8 +131,13 @@ jobs:
           test "$out" = "thine v$VERSION"
           export THINE_HOME="$(mktemp -d)"
           ./thine init zsh > /dev/null
-          ./thine ports --json > /dev/null
-          ./thine doctor --json > /dev/null
+          ./thine ports --json | python3 -m json.tool > /dev/null
+          # doctor exits 4 when it finds problems, and a fresh runner has
+          # them (thine isn't on PATH or wired into the shell). The check
+          # here is that it runs and emits valid JSON, not that it's healthy.
+          code=0; ./thine doctor --json > doctor.json || code=$?
+          test "$code" = 0 || test "$code" = 4
+          python3 -m json.tool doctor.json > /dev/null
 
   github-release:
     name: Create GitHub Release

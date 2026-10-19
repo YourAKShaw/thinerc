@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-20
+
+First published release. `v0.1.0` was tagged, but its release pipeline failed before publishing, so it has no GitHub Release or archives. The code is identical apart from the fix below.
+
+### Fixed
+
+- **Release pipeline:** the per-platform verify step treated `thine doctor`'s "problems found" exit code (4) as a failure. Fresh runners always have problems to report (thine isn't on `PATH` or set up in the shell), so every platform failed. The step now accepts 0 or 4 and validates the JSON, as CI does.
+
 ## [0.1.0] - 2026-10-20
 
 First version of `thine`, the command behind **.thinerc**.
@@ -24,5 +32,6 @@ First version of `thine`, the command behind **.thinerc**.
 - **Safety:** twelve invariants (S1–S12) with traced tests, write-ahead operations log with credential redaction, exclusive apply lock, path guard fuzzing, no network outside the explicit font installer, no telemetry.
 - **Project:** CI on Linux (x64, arm64) and macOS (arm64, Intel) with the race detector, fuzz smoke, staticcheck, govulncheck and CodeQL; a release workflow with deterministic archives, checksums and build-provenance attestations; `scripts/install.sh`; documentation with a power-user handbook, guides, references and eight ADRs.
 
-[Unreleased]: https://github.com/YourAKShaw/thinerc/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/YourAKShaw/thinerc/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/YourAKShaw/thinerc/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/YourAKShaw/thinerc/releases/tag/v0.1.0
