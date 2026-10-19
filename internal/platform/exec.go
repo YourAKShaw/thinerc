@@ -112,7 +112,6 @@ var SudoCallSites = [][]string{
 	{"sysctl", "-w", "vm.drop_caches=1"},
 	{"purge"},
 	{"apt-get", "clean"},
-	{"apt-get", "autoremove", "--purge", "-y"},
 	{"journalctl", "--vacuum-time="},
 	{"dnf", "clean", "packages"},
 	{"kill", "-TERM"},

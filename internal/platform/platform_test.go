@@ -6,7 +6,7 @@ import (
 )
 
 func TestS6_SudoRegistryIsExhaustive(t *testing.T) {
-	if len(SudoCallSites) != 7 {
+	if len(SudoCallSites) != 6 {
 		t.Fatalf("sudo call sites changed (%d); update plan §6.8 and this test together", len(SudoCallSites))
 	}
 	allowed := [][]string{{"sysctl", "-w", "vm.drop_caches=1"}, {"journalctl", "--vacuum-time=7d"}, {"kill", "-TERM", "42"}}
