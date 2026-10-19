@@ -168,3 +168,30 @@ func TestParseHumanSize(t *testing.T) {
 		}
 	}
 }
+
+func TestS10_ApplyStopsAfterCancel(t *testing.T) {
+	home := tempHome(t)
+	dl := filepath.Join(home, "Downloads")
+	os.MkdirAll(dl, 0o755)
+	old := time.Now().Add(-60 * 24 * time.Hour)
+	for _, n := range []string{"a.iso", "b.iso", "c.iso"} {
+		p := filepath.Join(dl, n)
+		os.WriteFile(p, make([]byte, 4096), 0o644)
+		os.Chtimes(p, old, old)
+	}
+	plan := Scan(context.Background(), Options{Only: []string{"downloads-installers"}, StaleAfter: 30 * 24 * time.Hour})
+	ctx, cancel := context.WithCancel(context.Background())
+	outs := Apply(ctx, "OPC", plan, nil, Hooks{Done: func(Outcome) { cancel() }}) // Ctrl-C during the first item
+	done, skipped := 0, 0
+	for _, o := range outs {
+		switch o.Result {
+		case "done":
+			done++
+		case "skipped":
+			skipped++
+		}
+	}
+	if done != 1 || skipped != 2 {
+		t.Fatalf("after cancel: %d done, %d skipped; want the current item finished and the rest untouched", done, skipped)
+	}
+}
