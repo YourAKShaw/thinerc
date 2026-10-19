@@ -17,7 +17,7 @@ func Sanitize(s string, max int) string {
 	var b strings.Builder
 	n := 0
 	for _, r := range s {
-		if r == '\t' {
+		if r == '\t' || r == '\n' {
 			r = ' '
 		}
 		if unicode.IsControl(r) || (r >= 0x80 && r <= 0x9f) || r == '\u2028' || r == '\u2029' {
