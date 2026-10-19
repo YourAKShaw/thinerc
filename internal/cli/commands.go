@@ -28,6 +28,10 @@ func (a *App) commands() []*cobra.Command {
 		a.trustCmd(),
 		a.untrustCmd(),
 		a.configCmd(),
+		a.doctorCmd(),
+		a.benchCmd(),
+		a.aiCmd(),
+		a.notifyCmd(),
 		a.versionCmd(),
 	}
 }
