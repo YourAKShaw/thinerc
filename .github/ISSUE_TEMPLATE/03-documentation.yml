@@ -1,0 +1,23 @@
+name: Documentation correction
+description: Report unclear or outdated docs, broken links, wrong examples, or stale facts about agents, fonts or terminals.
+labels: ["documentation"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: File, section, or link
+      placeholder: docs/guides/power-user.md#recipes
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or unclear?
+      description: Quote only the relevant passage and explain the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction or supporting source
+      description: For agent hooks, terminal settings or font releases, link the vendor's documentation.
