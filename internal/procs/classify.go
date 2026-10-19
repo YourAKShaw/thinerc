@@ -78,8 +78,6 @@ func (pol Policy) Classify(p Proc, groupPort bool) (Tier, string) {
 		return TierProtected, "PID 1 is the system's init process"
 	case pol.Ancestors[p.PID]:
 		return TierProtected, "it is thine's own parent (your shell, terminal or editor)"
-	case p.PGID == pol.SelfPGID && pol.SelfPGID > 0:
-		return TierProtected, "it is in thine's own process group"
 	case matchAny(names, protectedNames):
 		return TierProtected, fmt.Sprintf("%s is a system process", p.Name)
 	case matchAny(names, []string{"sshd"}) && os.Getenv("SSH_CONNECTION") != "":

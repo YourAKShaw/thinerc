@@ -48,7 +48,7 @@ func TestS4_ClassifyProtectsSystemAndAncestors(t *testing.T) {
 	}{
 		{Proc{Identity: Identity{PID: 1}, Name: "systemd"}, TierProtected},
 		{Proc{Identity: Identity{PID: 777}, Name: "zsh", UID: 1000}, TierProtected},
-		{Proc{Identity: Identity{PID: 900}, PGID: 50, Name: "node", UID: 1000}, TierProtected},
+		{Proc{Identity: Identity{PID: 900}, PGID: 50, Name: "node", UID: 1000}, TierDev}, // same group, not an ancestor
 		{Proc{Identity: Identity{PID: 901}, Name: "gnome-shell", UID: 1000}, TierProtected},
 		{Proc{Identity: Identity{PID: 902}, Name: "node", UID: 0, User: "root"}, TierConfirm},
 		{Proc{Identity: Identity{PID: 903}, Name: "postgres", UID: 1000}, TierConfirm},
@@ -72,6 +72,9 @@ func TestJobScope(t *testing.T) {
 	runner := Proc{Identity: Identity{PID: 100}, PGID: 100, UID: 1000, Name: "pnpm"}
 	child := Proc{Identity: Identity{PID: 101}, PGID: 100, UID: 1000, Name: "node"}
 	all := []Proc{runner, child, {Identity: Identity{PID: 5}, PGID: 5, UID: 1000, Name: "zsh"}}
+	if got := (Policy{Ancestors: map[int]bool{}, SelfUID: 1000, SelfPGID: 100}).JobScope(child, all); len(got) != 1 {
+		t.Error("thine's own process group must never be signalled as a job")
+	}
 	if got := pol.JobScope(child, all); len(got) != 2 {
 		t.Errorf("job scope should include runner and child, got %d", len(got))
 	}
