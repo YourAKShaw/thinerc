@@ -14,6 +14,8 @@ func (a *App) commands() []*cobra.Command {
 		a.undoCmd(),
 		a.historyCmd(),
 		a.trashCmd(),
+		a.whatsupCmd(),
+		a.nmCmd(),
 		a.helloCmd(),
 		a.initCmd(),
 		a.setupCmd(),
