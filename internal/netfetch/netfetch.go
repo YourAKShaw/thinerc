@@ -34,7 +34,7 @@ func Download(ctx context.Context, url, dest, wantSHA256 string, progress Progre
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "thine (+https://github.com/YourAKShaw/.thinerc)")
+	req.Header.Set("User-Agent", "thine (+https://github.com/YourAKShaw/thinerc)")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err

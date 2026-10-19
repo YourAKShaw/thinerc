@@ -4,7 +4,7 @@
 
 **Help make the safest, most delightful verbs layer a terminal has ever had.**
 
-[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-8B5CF6?style=flat-square)](https://github.com/YourAKShaw/.thinerc/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-8B5CF6?style=flat-square)](https://github.com/YourAKShaw/thinerc/pulls)
 [![Go 1.27](https://img.shields.io/badge/Go-1.27-334155?style=flat-square)](https://go.dev/)
 [![Conventional Commits + gitmoji](https://img.shields.io/badge/Conventional%20Commits-%2B%20gitmoji-8B5CF6?style=flat-square)](https://www.conventionalcommits.org/en/v1.0.0/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-8B5CF6?style=flat-square)](../LICENSE)
@@ -34,8 +34,8 @@ Read the [architecture overview](../docs/architecture.md) and the [safety model]
 | Contribution | Where to begin |
 | :--- | :--- |
 | Small fix or docs correction | Open a pull request with the problem and how you verified the fix. |
-| Bug | Search existing issues, then use the [bug report form](https://github.com/YourAKShaw/.thinerc/issues/new/choose) with `thine doctor --json` output. |
-| New verb, category or behaviour change | Open a [feature request](https://github.com/YourAKShaw/.thinerc/issues/new/choose) first with the use case, risk level and trade-offs. |
+| Bug | Search existing issues, then use the [bug report form](https://github.com/YourAKShaw/thinerc/issues/new/choose) with `thine doctor --json` output. |
+| New verb, category or behaviour change | Open a [feature request](https://github.com/YourAKShaw/thinerc/issues/new/choose) first with the use case, risk level and trade-offs. |
 | Security vulnerability | **Do not open an issue.** Follow the [security policy](SECURITY.md). |
 | Usage question | Follow the [support guide](SUPPORT.md). |
 
@@ -44,8 +44,8 @@ Read the [architecture overview](../docs/architecture.md) and the [safety model]
 Requirements: **Go 1.27+**, **Git**, and optionally `bash`, `zsh` and `fish` (the shell-integration tests source the generated scripts in every shell that is installed).
 
 ```sh
-git clone https://github.com/YourAKShaw/.thinerc.git
-cd .thinerc
+git clone https://github.com/YourAKShaw/thinerc.git
+cd thinerc
 make build          # → bin/thine
 ./bin/thine         # the animated welcome screen
 make check          # everything CI runs: fmt, vet, boundaries, invariants, tests, cross-compile

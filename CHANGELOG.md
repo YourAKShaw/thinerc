@@ -22,4 +22,4 @@ First version of `thine`, the command behind **.thinerc**.
 - **Safety:** twelve invariants (S1–S12) with traced tests, write-ahead operations log with credential redaction, exclusive apply lock, path guard fuzzing, no network outside the explicit font installer, no telemetry.
 - **Project:** CI on Linux (x64, arm64) and macOS (arm64, Intel) with the race detector, fuzz smoke, staticcheck, govulncheck and CodeQL; a release workflow with deterministic archives, checksums and build-provenance attestations; `scripts/install.sh`; documentation with a power-user handbook, guides, references and eight ADRs.
 
-[Unreleased]: https://github.com/YourAKShaw/.thinerc/commits/main
+[Unreleased]: https://github.com/YourAKShaw/thinerc/commits/main

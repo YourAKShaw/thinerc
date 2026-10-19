@@ -13,7 +13,7 @@
 
 **Please do not open a public issue, discussion or pull request for a vulnerability.**
 
-Report it privately through GitHub: open the repository's **Security** tab and choose **Report a vulnerability** ([direct link](https://github.com/YourAKShaw/.thinerc/security/advisories/new)).
+Report it privately through GitHub: open the repository's **Security** tab and choose **Report a vulnerability** ([direct link](https://github.com/YourAKShaw/thinerc/security/advisories/new)).
 
 Please include:
 

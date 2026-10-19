@@ -7,7 +7,7 @@ body:
       value: |
         Search existing issues before submitting. Use a minimal, sanitized example: **never paste tokens, private paths you can't share, or real secrets**.
         If thine deleted, moved or killed something it shouldn't have, mark the safety box below — those reports block releases.
-        For security vulnerabilities, use the [private reporting form](https://github.com/YourAKShaw/.thinerc/security/advisories/new) instead.
+        For security vulnerabilities, use the [private reporting form](https://github.com/YourAKShaw/thinerc/security/advisories/new) instead.
   - type: dropdown
     id: area
     attributes:

@@ -31,7 +31,7 @@ Users verify downloads with:
 
 ```sh
 sha256sum --ignore-missing -c checksums.txt          # macOS: shasum -a 256 --ignore-missing -c checksums.txt
-gh attestation verify thine_X.Y.Z_linux_amd64.tar.gz --repo YourAKShaw/.thinerc
+gh attestation verify thine_X.Y.Z_linux_amd64.tar.gz --repo YourAKShaw/thinerc
 ```
 
 ## Bad-release runbook

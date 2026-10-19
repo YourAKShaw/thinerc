@@ -7,13 +7,13 @@ Five minutes from nothing to `killfb && pnpm dev`.
 **With the installer** (Linux and macOS, x64 and arm64 — verifies the SHA-256, no sudo):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/YourAKShaw/.thinerc/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/YourAKShaw/thinerc/main/scripts/install.sh | sh
 ```
 
 **From source** (Go 1.27+):
 
 ```sh
-git clone https://github.com/YourAKShaw/.thinerc.git && cd .thinerc
+git clone https://github.com/YourAKShaw/thinerc.git && cd thinerc
 make install            # → ~/.local/bin/thine
 ```
 

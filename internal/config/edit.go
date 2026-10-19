@@ -8,7 +8,7 @@ import (
 )
 
 // Starter is the annotated config written by `thine config init`.
-const Starter = `# thine configuration — https://github.com/YourAKShaw/.thinerc/blob/main/docs/configuration.md
+const Starter = `# thine configuration — https://github.com/YourAKShaw/thinerc/blob/main/docs/configuration.md
 # Validate with: thine config validate
 version = 1
 

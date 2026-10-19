@@ -73,4 +73,4 @@ Typical: ≈ 2 ms to generate init and ≈ 3 ms added per new shell — and noth
 
 ## Reporting a bug
 
-Use the [bug report form](https://github.com/YourAKShaw/.thinerc/issues/new/choose) with `thine doctor --json`. If thine deleted, moved or killed something it shouldn't have, tick the safety box — those reports block releases. Security issues go through the [private form](../../.github/SECURITY.md).
+Use the [bug report form](https://github.com/YourAKShaw/thinerc/issues/new/choose) with `thine doctor --json`. If thine deleted, moved or killed something it shouldn't have, tick the safety box — those reports block releases. Security issues go through the [private form](../../.github/SECURITY.md).
