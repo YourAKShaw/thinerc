@@ -1,0 +1,52 @@
+name: Feature request
+description: Propose a new verb, cleanup category, recipe capability, theme, or workflow improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. thine is a *verbs layer*, not a framework: prompts, history and fuzzy finding stay with Starship, Atuin and fzf.
+        Proposals that delete or kill things need a dry-run story, an undo story and a risk level.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What do you hand-roll in your .zshrc today, and what goes wrong with it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: Command, flags, config keys and example output. For a cleanup category, include the owning tool's own clean command.
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk level of the proposed action
+      options:
+        - read-only (changes nothing)
+        - reversible (undoable, e.g. quarantine)
+        - regenerable (not undoable, but rebuilt automatically, e.g. caches)
+        - destructive (neither — typed confirmation)
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and trade-offs
+      description: Workarounds you use today, and any effect on shell startup time, cross-platform support (Linux/macOS), agents or safety.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: How would we know it works?
+      description: An example scenario and observable success criteria.
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to implement this and can open a pull request.

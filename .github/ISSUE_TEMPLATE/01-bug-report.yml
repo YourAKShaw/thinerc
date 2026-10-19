@@ -1,0 +1,88 @@
+name: Bug report
+description: Something does not work as documented — a wrong plan, a refused kill, a broken shortcut, an install problem.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before submitting. Use a minimal, sanitized example: **never paste tokens, private paths you can't share, or real secrets**.
+        If thine deleted, moved or killed something it shouldn't have, mark the safety box below — those reports block releases.
+        For security vulnerabilities, use the [private reporting form](https://github.com/YourAKShaw/.thinerc/security/advisories/new) instead.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Ports & kill (port, ports, kill, killfb)
+        - Memory (freeup)
+        - Disk (cleanup, undo, trash, history)
+        - node_modules (nm reset / nuke-nm)
+        - Recipes & import
+        - Shell integration (init, setup, completions)
+        - Look & feel (theme, fonts, animations)
+        - Doctor / bench / notify / ai
+        - Installation / release binaries
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: thine changed, deleted, moved or signalled something it should not have (data-loss class — highest priority)
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence of commands that shows the problem.
+      placeholder: |
+        python3 -m http.server 3000 &
+        thine kill 3000 --dry-run
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include the full output. Adding `--json` (where supported) or `--plain` makes it easier to read.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `thine doctor --json`
+      description: Shows version, platform, shell wiring, config state and detected agents. Remove anything you consider private.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: history
+    attributes:
+      label: Relevant `thine history` lines (if something changed)
+      description: The operation ID lets us correlate with the ops log. Run `thine history -n 5`.
+      render: text
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install thine?
+      options:
+        - install.sh
+        - Release archive
+        - make install (from source)
+        - go build (from source)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: terminal
+    attributes:
+      label: OS, terminal and shell
+      placeholder: Ubuntu 24.04 + GNOME Terminal + zsh 5.9, macOS 15 + iTerm2 + fish 4…

@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  # The release workflow runs this exact pipeline before publishing.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NO_COLOR: "1"
+  CGO_ENABLED: "0"
+
+jobs:
+  quality:
+    name: Format, vet, boundaries, invariants, static analysis, vulnerabilities
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: go.mod and go.sum are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum || {
+            echo "::error::go.mod/go.sum are not tidy. Run 'go mod tidy' and commit the result."
+            exit 1
+          }
+      - name: Verify module checksums
+        run: go mod verify
+      - name: gofmt, go vet, architectural boundaries, invariant tracing
+        run: make lint
+      - name: staticcheck
+        run: go run honnef.co/go/tools/cmd/staticcheck@v0.8.2 ./...
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Install zsh and fish (the shell tests source generated scripts in every installed shell)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh fish
+      - name: Install fish
+        if: runner.os == 'macOS'
+        run: brew install fish
+      - name: Unit, integration and end-to-end tests (race detector)
+        env:
+          CGO_ENABLED: "1"
+        run: go test -race -count=1 ./...
+
+  fuzz:
+    name: Fuzz smoke (path guard, /proc/net/tcp parser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: go test -run='^$' -fuzz=FuzzGuard -fuzztime=60s ./internal/cleanup
+      - run: go test -run='^$' -fuzz=FuzzParseProcNetTCP -fuzztime=30s ./internal/ports
+
+  build:
+    name: Cross-compile and smoke-test the binary
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Cross-compile linux/darwin × amd64/arm64
+        run: make cross
+      - name: Binaries stay under 20 MiB
+        run: |
+          ls -l dist/
+          for f in dist/*; do
+            size=$(stat -c %s "$f")
+            if [ "$size" -gt 20971520 ]; then echo "::error::$f is $size bytes (> 20 MiB)"; exit 1; fi
+          done
+      - name: Smoke-test the built binary in a throwaway home
+        run: |
+          bin="$PWD/dist/thine-linux-amd64"
+          export THINE_HOME="$(mktemp -d)" SHELL=/bin/bash
+          "$bin" version --json | python3 -m json.tool
+          "$bin" init bash | bash -n
+          "$bin" init zsh > /dev/null
+          "$bin" setup --shell bash --yes
+          grep -q '>>> thine >>>' "$THINE_HOME/.bashrc"
+          "$bin" setup --shell bash --yes       # idempotent: no second block
+          test "$(grep -c '>>> thine >>>' "$THINE_HOME/.bashrc")" = 1
+          "$bin" doctor --json | python3 -m json.tool > /dev/null
+          "$bin" whatsup --json | python3 -m json.tool > /dev/null
+          "$bin" ports --json | python3 -m json.tool > /dev/null
+          code=0; "$bin" cleanup --json > plan.json || code=$?
+          test "$code" = 0 || test "$code" = 6
+          python3 -m json.tool plan.json > /dev/null
+          "$bin" setup --shell bash --uninstall --yes
+          ! grep -q '>>> thine >>>' "$THINE_HOME/.bashrc"

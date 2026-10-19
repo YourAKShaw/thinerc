@@ -1,0 +1,14 @@
+# Default owner for everything in the repository.
+* @YourAKShaw
+
+# Safety-critical areas: changes here decide what gets signalled, deleted,
+# executed with sudo, fetched from the network, or trusted.
+/internal/procs/ @YourAKShaw
+/internal/cleanup/ @YourAKShaw
+/internal/quarantine/ @YourAKShaw
+/internal/platform/ @YourAKShaw
+/internal/netfetch/ @YourAKShaw
+/internal/config/trust.go @YourAKShaw
+/internal/recipes/ @YourAKShaw
+/scripts/install.sh @YourAKShaw
+/.github/workflows/ @YourAKShaw

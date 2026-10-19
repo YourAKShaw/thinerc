@@ -1,0 +1,184 @@
+name: Release
+
+# One tag → one run → signed-provenance archives for Linux and macOS + GitHub Release.
+# Steps and the bad-release runbook: docs/releasing.md
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Check tag and changelog
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: version
+        name: Tag must have a CHANGELOG entry
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [$version]' section."
+            exit 1
+          fi
+          case "$version" in *-*) prerelease=true ;; *) prerelease=false ;; esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+
+  ci:
+    name: CI
+    needs: tag
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    name: Build release archives
+    needs: [tag, ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false # no dependency cache in a job that holds an OIDC token
+      - name: Build reproducible archives
+        env:
+          VERSION: ${{ needs.tag.outputs.version }}
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p release
+          commit="$(git rev-parse --short HEAD)"
+          date="$(git log -1 --format=%cI)"
+          ldflags="-s -w -buildid= \
+            -X github.com/YourAKShaw/thinerc/internal/buildinfo.Version=v$VERSION \
+            -X github.com/YourAKShaw/thinerc/internal/buildinfo.Commit=$commit \
+            -X github.com/YourAKShaw/thinerc/internal/buildinfo.Date=$date"
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            os="${target%/*}"; arch="${target#*/}"
+            dir="build/thine_${VERSION}_${os}_${arch}"
+            mkdir -p "$dir"
+            GOOS="$os" GOARCH="$arch" go build -trimpath -ldflags "$ldflags" -o "$dir/thine" ./cmd/thine
+            cp LICENSE README.md CHANGELOG.md "$dir/"
+            # Deterministic tarballs: fixed owner, order and mtime.
+            tar --sort=name --owner=0 --group=0 --numeric-owner --mtime="$date" \
+              -C "$dir" -czf "release/thine_${VERSION}_${os}_${arch}.tar.gz" thine LICENSE README.md CHANGELOG.md
+          done
+          cp scripts/install.sh release/install.sh
+          (cd release && sha256sum thine_*.tar.gz install.sh > checksums.txt && cat checksums.txt)
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: release/thine_*.tar.gz
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
+
+  verify:
+    name: Run ${{ matrix.target }} on ${{ matrix.os }}
+    needs: [tag, build]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: linux_amd64 }
+          - { os: ubuntu-24.04-arm, target: linux_arm64 }
+          - { os: macos-latest, target: darwin_arm64 }
+          - { os: macos-15-intel, target: darwin_amd64 }
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+      - name: Verify checksum, unpack, run
+        working-directory: release
+        env:
+          VERSION: ${{ needs.tag.outputs.version }}
+        run: |
+          file="thine_${VERSION}_${{ matrix.target }}.tar.gz"
+          grep "  $file\$" checksums.txt > expected.txt
+          if command -v sha256sum >/dev/null; then sha256sum --check expected.txt; else shasum -a 256 --check expected.txt; fi
+          tar -xzf "$file" thine
+          out="$(./thine --version)"
+          echo "$out"
+          test "$out" = "thine v$VERSION"
+          export THINE_HOME="$(mktemp -d)"
+          ./thine init zsh > /dev/null
+          ./thine ports --json > /dev/null
+          ./thine doctor --json > /dev/null
+
+  github-release:
+    name: Create GitHub Release
+    needs: [tag, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+      - name: Release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ needs.tag.outputs.version }}
+        run: |
+          awk -v v="[$VERSION]" '
+            index($0, "## " v) == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          {
+            echo
+            echo "### Install"
+            echo
+            echo '```sh'
+            echo "curl -fsSL https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/install.sh | THINE_VERSION=$GITHUB_REF_NAME sh"
+            echo "thine setup"
+            echo '```'
+            echo
+            echo "Verify archives with \`checksums.txt\` and \`gh attestation verify <file> --repo $GITHUB_REPOSITORY\`."
+          } >> notes.md
+          cat notes.md
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          if [ "${{ needs.tag.outputs.prerelease }}" = "true" ]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" release/thine_*.tar.gz release/install.sh release/checksums.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --verify-tag \
+            "${flags[@]}"
