@@ -388,8 +388,8 @@ func (a *App) applyCleanup(ctx context.Context, plan cleanup.Plan, roots []strin
 	removePlan(opID)
 
 	if a.json() {
-		return a.emitJSON(map[string]any{"op_id": opID, "mode": "applied", "result": result, "freed_bytes": freed,
-			"quarantined_bytes": quarantined, "outcomes": outs, "exit_code": code})
+		return a.emitJSONCode(map[string]any{"op_id": opID, "mode": "applied", "result": result, "freed_bytes": freed,
+			"quarantined_bytes": quarantined, "outcomes": outs, "exit_code": code}, code)
 	}
 	fmt.Fprintln(t.Out)
 	var msg string

@@ -220,6 +220,18 @@ func (a *App) emitJSON(v map[string]any) error {
 	return enc.Encode(v)
 }
 
+// emitJSONCode writes the document and still exits with code, so `--json`
+// callers get the same exit-code contract as humans.
+func (a *App) emitJSONCode(v map[string]any, code int) error {
+	if err := a.emitJSON(v); err != nil {
+		return err
+	}
+	if code != ExitOK {
+		return silent(code)
+	}
+	return nil
+}
+
 func (a *App) json() bool { return a.flags.json }
 
 // isAgent reports agent mode (plan §6.7).
