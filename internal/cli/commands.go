@@ -16,12 +16,18 @@ func (a *App) commands() []*cobra.Command {
 		a.trashCmd(),
 		a.whatsupCmd(),
 		a.nmCmd(),
+		a.runCmd(),
+		a.recipesCmd(),
+		a.importCmd(),
 		a.helloCmd(),
 		a.themeCmd(),
 		a.fontsCmd(),
 		a.fxCmd(),
 		a.initCmd(),
 		a.setupCmd(),
+		a.trustCmd(),
+		a.untrustCmd(),
+		a.configCmd(),
 		a.versionCmd(),
 	}
 }
