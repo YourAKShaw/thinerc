@@ -1,1 +1,14 @@
+# Private research inputs (kept local; see docs/ for the published design)
 references/
+
+# Build output
+/bin/
+/dist/
+/coverage.out
+*.test
+
+# Editors and OS noise
+.idea/
+.vscode/
+*.swp
+.DS_Store
