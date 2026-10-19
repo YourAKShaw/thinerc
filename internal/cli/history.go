@@ -112,7 +112,11 @@ func (a *App) undoCmd() *cobra.Command {
 			}
 			oplog.Append(oplog.Record{OpID: undoID, Phase: "outcome", Verb: "undo", Argv: a.argv, Caller: a.Caller, Items: logged, Result: "completed"})
 			if a.json() {
-				return a.emitJSON(map[string]any{"op_id": op.ID, "restored": res, "error": errString(rerr)})
+				code := ExitOK
+				if rerr != nil {
+					code = ExitPartial
+				}
+				return a.emitJSONCode(map[string]any{"op_id": op.ID, "restored": res, "error": errString(rerr)}, code)
 			}
 			for _, r := range res {
 				msg := fmt.Sprintf("%s %s", t.Ok("restored"), t.Bold(ui.MiddleTruncate(ui.Sanitize(r.Original, 300), 60)))

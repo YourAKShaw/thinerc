@@ -42,7 +42,13 @@ func (a *App) doctorCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			checks := a.runChecks(cmd.Context())
 			if a.json() {
-				return a.emitJSON(map[string]any{"checks": checks})
+				code := ExitOK
+				for _, c := range checks {
+					if c.Status == "fail" {
+						code = ExitPartial
+					}
+				}
+				return a.emitJSONCode(map[string]any{"checks": checks}, code)
 			}
 			return a.printChecks(checks)
 		},

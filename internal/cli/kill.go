@@ -229,7 +229,7 @@ func (a *App) runKill(ctx context.Context, args []string, o killOpts) error {
 	}
 	if len(exec) == 0 {
 		if a.json() {
-			return a.emitJSON(killJSON("refused", "", want, targets, nil, want, ExitRefused))
+			return a.emitJSONCode(killJSON("refused", "", want, targets, nil, want, ExitRefused), ExitRefused)
 		}
 		t.Step(ui.KindFail, t.Bad("nothing was stopped")+t.Muted(" — every target is protected or was declined"))
 		return silent(ExitRefused)
@@ -254,11 +254,26 @@ func (a *App) runKill(ctx context.Context, args []string, o killOpts) error {
 		a.stopProcess(kt, grace, o)
 	}
 
-	// 5 — verify the ports, report.
-	after, _ := a.resolvePorts(ctx, want, pol)
+	// 5 — verify the ports, report. A multi-threaded process (Go, Node) can
+	// look gone while its last threads still release the socket, so give the
+	// kernel a moment when every target we acted on has exited.
+	allStopped := true
+	for _, kt := range exec {
+		if kt.logResult() != "done" {
+			allStopped = false
+		}
+	}
 	held := map[int]bool{}
-	for _, r := range after {
-		held[r.Port] = true
+	for deadline := time.Now().Add(1500 * time.Millisecond); ; {
+		after, _ := a.resolvePorts(ctx, want, pol)
+		clear(held)
+		for _, r := range after {
+			held[r.Port] = true
+		}
+		if len(held) == 0 || !allStopped || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
 	var free, stillHeld []int
 	for _, p := range want {
@@ -283,7 +298,7 @@ func (a *App) runKill(ctx context.Context, args []string, o killOpts) error {
 	oplog.Append(oplog.Record{OpID: opID, Phase: "outcome", Verb: "kill", Caller: a.Caller, Items: items, Result: result})
 
 	if a.json() {
-		return a.emitJSON(killJSON("applied", opID, want, targets, free, stillHeld, code))
+		return a.emitJSONCode(killJSON("applied", opID, want, targets, free, stillHeld, code), code)
 	}
 	elapsed := ui.HumanDuration(time.Since(start))
 	if len(want) > 0 {
