@@ -13,7 +13,7 @@ func TestS8_SanitizeStripsEscapesAndControls(t *testing.T) {
 		"\x1b[31mred\x1b[0m":        "red",
 		"a\x00b\x07c\rd":            "abcd",
 		"tab\there":                 "tab here",
-		"line\u2028break\u0085":          "linebreak",
+		"line\u2028break\u0085":     "linebreak",
 		"\x1b[2J\x1b[Hclear-screen": "clear-screen",
 		"\x1bP+q544e\x1b\\after":    "+q544eafter",
 	}
