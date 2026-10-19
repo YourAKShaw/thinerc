@@ -1,7 +1,7 @@
 #!/bin/sh
 # thine installer — short enough to read before you run it.
 #
-#   curl -fsSL https://raw.githubusercontent.com/YourAKShaw/.thinerc/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/YourAKShaw/thinerc/main/scripts/install.sh | sh
 #
 # What it does: detects your OS/arch, downloads the release archive and
 # checksums.txt from GitHub Releases, verifies the SHA-256 (and the build
@@ -12,7 +12,7 @@
 # the install directory.
 set -eu
 
-repo="YourAKShaw/.thinerc"
+repo="YourAKShaw/thinerc"
 bin_dir="${THINE_BIN_DIR:-$HOME/.local/bin}"
 
 say() { printf '\033[1;35m✦\033[0m %s\n' "$*"; }

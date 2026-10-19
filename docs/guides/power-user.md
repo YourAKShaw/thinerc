@@ -19,7 +19,7 @@ A [one-page cheat sheet](#cheat-sheet) and [a day with thine](#a-day-with-thine)
 ## Level 0 · Wire it in
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/YourAKShaw/.thinerc/main/scripts/install.sh | sh   # or: make install
+curl -fsSL https://raw.githubusercontent.com/YourAKShaw/thinerc/main/scripts/install.sh | sh   # or: make install
 thine setup          # shows the diff, backs up your rc file, adds one marked block at the end
 exec $SHELL          # reload
 thine                # 👋 the animated welcome

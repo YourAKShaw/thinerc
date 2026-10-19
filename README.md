@@ -8,8 +8,8 @@
 
 Free a stuck port, reclaim gigabytes of disk, read memory honestly, and turn your aliases into typed recipes — with previews, undo, a twinkling star spinner and a splash screen you'll actually enjoy. One static binary for Linux and macOS.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/YourAKShaw/.thinerc/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/YourAKShaw/.thinerc/actions/workflows/ci.yml)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/YourAKShaw/.thinerc/codeql.yml?branch=main&style=flat-square&label=CodeQL)](https://github.com/YourAKShaw/.thinerc/actions/workflows/codeql.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/YourAKShaw/thinerc/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/YourAKShaw/thinerc/actions/workflows/ci.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/YourAKShaw/thinerc/codeql.yml?branch=main&style=flat-square&label=CodeQL)](https://github.com/YourAKShaw/thinerc/actions/workflows/codeql.yml)
 [![Go 1.27](https://img.shields.io/badge/Go-1.27-334155?style=flat-square)](https://go.dev/)
 [![Linux · macOS](https://img.shields.io/badge/Linux%20%C2%B7%20macOS-supported-8B5CF6?style=flat-square)](#-install)
 [![bash · zsh · fish](https://img.shields.io/badge/bash%20%C2%B7%20zsh%20%C2%B7%20fish-integrated-334155?style=flat-square)](docs/commands.md#shell-shortcuts)
@@ -50,16 +50,22 @@ Every developer's `.zshrc` grows the same helpers: `killport() { kill -9 $(lsof 
 ### Installer (verifies the SHA-256, no sudo)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/YourAKShaw/.thinerc/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/YourAKShaw/thinerc/main/scripts/install.sh | sh
 ```
 
 It downloads the release archive and `checksums.txt` from GitHub Releases, refuses on a checksum mismatch, verifies build provenance when the GitHub CLI is available, and installs to `~/.local/bin`. Read it first — it's short: [`scripts/install.sh`](scripts/install.sh).
 
+### With Go
+
+```sh
+go install github.com/YourAKShaw/thinerc/cmd/thine@latest   # Go 1.27+ → $(go env GOPATH)/bin
+```
+
 ### From source
 
 ```sh
-git clone https://github.com/YourAKShaw/.thinerc.git
-cd .thinerc
+git clone https://github.com/YourAKShaw/thinerc.git
+cd thinerc
 make install          # Go 1.27+ → ~/.local/bin/thine
 ```
 
@@ -78,7 +84,7 @@ thine                 # ✦ say hello
 
 ```sh
 sha256sum --ignore-missing -c checksums.txt          # macOS: shasum -a 256 --ignore-missing -c checksums.txt
-gh attestation verify thine_<version>_linux_amd64.tar.gz --repo YourAKShaw/.thinerc
+gh attestation verify thine_<version>_linux_amd64.tar.gz --repo YourAKShaw/thinerc
 ```
 
 </details>
@@ -240,7 +246,7 @@ thine is a verbs layer — it deliberately doesn't rebuild what great tools alre
 ## 🧑‍💻 Development
 
 ```sh
-git clone https://github.com/YourAKShaw/.thinerc.git && cd .thinerc
+git clone https://github.com/YourAKShaw/thinerc.git && cd thinerc
 make build && ./bin/thine     # build and say hello
 make check                    # gofmt, vet, boundaries, S1–S12 invariant tracing, tests, cross-compile
 make demo                     # every animation
@@ -252,7 +258,7 @@ Tests run against throwaway homes (`THINE_HOME`), source the generated scripts i
 
 ## 🤝 Contributing, support and security
 
-Contributions are welcome — start with the [contribution guide](.github/CONTRIBUTING.md), use the [issue forms](https://github.com/YourAKShaw/.thinerc/issues/new/choose), or read the [support guide](.github/SUPPORT.md). If thine ever deletes, moves or kills something it shouldn't have, that's a release blocker — please report it. Vulnerabilities go through the private [security policy](.github/SECURITY.md).
+Contributions are welcome — start with the [contribution guide](.github/CONTRIBUTING.md), use the [issue forms](https://github.com/YourAKShaw/thinerc/issues/new/choose), or read the [support guide](.github/SUPPORT.md). If thine ever deletes, moves or kills something it shouldn't have, that's a release blocker — please report it. Vulnerabilities go through the private [security policy](.github/SECURITY.md).
 
 ## License
 
