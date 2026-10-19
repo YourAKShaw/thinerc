@@ -6,6 +6,7 @@ toolchain go1.27.2
 
 require (
 	github.com/mattn/go-runewidth v0.0.31
+	github.com/pelletier/go-toml/v2 v2.4.3
 	golang.org/x/sys v0.49.0
 	golang.org/x/term v0.47.0
 )
