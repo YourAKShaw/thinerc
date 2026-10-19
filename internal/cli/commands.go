@@ -8,6 +8,7 @@ func (a *App) commands() []*cobra.Command {
 		a.portCmd(),
 		a.portsCmd(),
 		a.killCmd(),
+		a.freeupCmd(),
 		a.helloCmd(),
 		a.initCmd(),
 		a.setupCmd(),
