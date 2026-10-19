@@ -69,9 +69,20 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install fish
       - name: Unit, integration and end-to-end tests (race detector)
+        shell: bash
         env:
           CGO_ENABLED: "1"
-        run: go test -race -count=1 ./...
+        run: |
+          set -o pipefail
+          status=0
+          go test -race -count=1 ./... 2>&1 | tee test.log || status=$?
+          if [ "$status" -ne 0 ]; then
+            # Surface failures as annotations so they're visible without opening the log.
+            grep -E -- '--- FAIL|_test\.go:[0-9]+:|panic:|DATA RACE' test.log | head -40 | while IFS= read -r line; do
+              echo "::error title=go test (${{ matrix.os }})::$line"
+            done
+          fi
+          exit "$status"
 
   fuzz:
     name: Fuzz smoke (path guard, /proc/net/tcp parser)
