@@ -41,6 +41,7 @@ fmt-check:
 
 lint: fmt-check vet ## Formatting and static checks
 	@scripts/check-boundaries.sh
+	@scripts/trace-invariants.sh
 
 cross: ## Cross-compile every supported target
 	@for t in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do \

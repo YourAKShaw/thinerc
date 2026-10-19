@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"sort"
 	"strconv"
 	"strings"
@@ -339,6 +340,12 @@ func (a *App) printKillPlan(kt *killTarget, scope string) {
 // to SIGKILL for dev targets (or with --force).
 func (a *App) stopProcess(kt *killTarget, grace time.Duration, o killOpts) {
 	t := a.T
+	if a.json() {
+		// Machine output: results go into the JSON document only.
+		orig := t.Out
+		t.Out = io.Discard
+		defer func() { t.Out = orig }()
+	}
 	start := time.Now()
 	label := fmt.Sprintf("%s (%d)", ui.Sanitize(kt.Proc.Name, 30), kt.Proc.PID)
 	signalled := 0
@@ -415,6 +422,11 @@ func (a *App) stopProcess(kt *killTarget, grace time.Duration, o killOpts) {
 
 func (a *App) stopContainer(ctx context.Context, kt *killTarget, approved bool) {
 	t := a.T
+	if a.json() {
+		orig := t.Out
+		t.Out = io.Discard
+		defer func() { t.Out = orig }()
+	}
 	if !approved {
 		kt.Result = "skipped"
 		t.Step(ui.KindWarn, fmt.Sprintf("container %s skipped %s", t.Bold(kt.Container), t.Muted("— add --docker to run docker stop")))
