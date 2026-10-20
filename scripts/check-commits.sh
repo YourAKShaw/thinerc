@@ -4,7 +4,7 @@
 #   - a blank line, then a body explaining why
 #   - footers: Breaking-Changes: none (…) or BREAKING CHANGE: … with "!", plus Refs:
 #   - any Co-Authored-By trailer uses exactly that key casing
-# Usage: scripts/check-commits.sh <revision range or commit>   (merge commits are skipped)
+# Usage: scripts/check-commits.sh <revision range or commit>   (merge and Dependabot commits are skipped)
 set -eu
 cd "$(dirname "$0")/.."
 [ $# -eq 1 ] || { echo "usage: $0 <base..head | commit>" >&2; exit 2; }
@@ -16,6 +16,8 @@ types='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
 fail=0
 
 for sha in $commits; do
+	# Merged Dependabot pull requests reach main with Dependabot as author.
+	[ "$(git log -1 --format=%an "$sha")" != "dependabot[bot]" ] || continue
 	msg=$(git log -1 --format=%B "$sha")
 	header=$(printf '%s\n' "$msg" | sed -n 1p)
 	problems=""

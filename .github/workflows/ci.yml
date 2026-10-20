@@ -50,7 +50,8 @@ jobs:
   commits:
     name: Commit messages follow the convention
     # The release workflow calls this pipeline on tags; those commits were checked on main.
-    if: github.ref_type != 'tag'
+    # Dependabot writes its own messages and cannot add the gitmoji or the footers.
+    if: github.ref_type != 'tag' && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
