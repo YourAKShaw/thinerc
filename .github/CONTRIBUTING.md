@@ -129,6 +129,12 @@ Breaking-Changes: none (output is now valid JSON, as documented)
 Refs: docs/reference/json.md
 ```
 
+CI checks every new commit against this convention. Run the same check before you push:
+
+```sh
+scripts/check-commits.sh origin/main..HEAD
+```
+
 ## 📬 Open a reviewable pull request
 
 Use the [pull request template](pull_request_template.md) to explain:

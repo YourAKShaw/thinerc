@@ -47,6 +47,30 @@ jobs:
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 
+  commits:
+    name: Commit messages follow the convention
+    # The release workflow calls this pipeline on tags; those commits were checked on main.
+    # Dependabot writes its own messages and cannot add the gitmoji or the footers.
+    if: github.ref_type != 'tag' && github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check every new commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # A new branch or a manual run has no base; check only the head commit.
+          if [ -z "${BASE//0/}" ]; then
+            scripts/check-commits.sh "$HEAD"
+          else
+            scripts/check-commits.sh "$BASE..$HEAD"
+          fi
+
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
