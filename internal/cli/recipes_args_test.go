@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/YourAKShaw/thinerc/internal/recipes"
 )
 
 const separatorRecipes = `
@@ -41,5 +43,24 @@ func TestRunConsumesOnlyLeadingSeparator(t *testing.T) {
 		if code != ExitOK || strings.TrimSpace(out) != c.want {
 			t.Errorf("run %v: exit %d, output %q, want %q", c.args, code, out, c.want)
 		}
+	}
+}
+
+func TestS1_AgentCannotRunImportedRecipeWithArgs(t *testing.T) {
+	dir := t.TempDir()
+	rc := filepath.Join(dir, "rc")
+	if err := os.WriteFile(rc, []byte("zzwrite() { echo \"$1\" > \"$2\"; }\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg := filepath.Join(dir, "config.toml")
+	if err := os.WriteFile(cfg, []byte(recipes.TOML(recipes.Import([]string{rc}))), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(dir, "target")
+	if _, code := run(t, map[string]string{"THINE_AGENT": "1"}, "--config", cfg, "run", "zzwrite", "--", "x", target); code != ExitNeedsApply {
+		t.Fatalf("exit %d, want %d", code, ExitNeedsApply)
+	}
+	if _, err := os.Stat(target); err == nil {
+		t.Fatal("agent wrote a file through an imported recipe")
 	}
 }

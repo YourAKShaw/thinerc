@@ -137,6 +137,20 @@ func baseSuggestion(name string) Suggestion {
 // shell (a recipe runs in a child process and can't change its parent).
 var shellStateRE = regexp.MustCompile(`^\s*(source|\.|cd|export|exec|unset|alias|eval|pushd|popd|set|declare|typeset)\s`)
 
+// usesArgsRE matches a shell body that reads its positional arguments.
+var usesArgsRE = regexp.MustCompile(`\$(\{)?[@*1-9]`)
+
+// capArgumentRisk keeps shell recipes that take arguments out of read-only:
+// the caller chooses those arguments, and read-only is what agents may run
+// without approval. `curl "$@"` can write or upload, whatever its first word.
+func capArgumentRisk(risk string, s *Suggestion) string {
+	if risk != "read-only" {
+		return risk
+	}
+	s.Notes = append(s.Notes, "takes arguments, so it is labelled reversible rather than read-only")
+	return "reversible"
+}
+
 func fromAlias(name, value string) Suggestion {
 	s := baseSuggestion(name)
 	if shellStateRE.MatchString(value + " ") {
@@ -145,6 +159,7 @@ func fromAlias(name, value string) Suggestion {
 	r := config.Recipe{Description: value, Alias: s.Name, Passthrough: true, Risk: guessRisk(value)}
 	if metaRE.MatchString(value) {
 		r.Shell = value + ` "$@"`
+		r.Risk = capArgumentRisk(r.Risk, &s)
 		s.Notes = append(s.Notes, "uses shell syntax, so it becomes an unreviewed `shell` recipe")
 	} else {
 		r.Steps = []config.Step{{Run: strings.Fields(value)}}
@@ -167,6 +182,9 @@ func fromFunction(name, body string) Suggestion {
 		desc = desc[:77] + "…"
 	}
 	s.Recipe = config.Recipe{Description: desc, Alias: s.Name, Passthrough: true, Risk: guessRisk(body), Shell: body}
+	if usesArgsRE.MatchString(body) {
+		s.Recipe.Risk = capArgumentRisk(s.Recipe.Risk, &s)
+	}
 	s.Notes = append(s.Notes, "functions become `shell` recipes; arguments arrive as $1, $2… exactly as before")
 	if strings.Contains(body, "[[") || strings.Contains(body, "declare") || strings.Contains(body, "local ") {
 		s.Notes = append(s.Notes, "uses bash-only syntax; recipes run with sh — review before enabling")

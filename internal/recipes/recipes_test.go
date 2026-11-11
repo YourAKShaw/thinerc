@@ -204,3 +204,23 @@ func TestImportedShellRecipesReceivePositionalArgs(t *testing.T) {
 		}
 	}
 }
+
+func TestImportedShellRecipesWithArgsAreNotReadOnly(t *testing.T) {
+	cases := []struct {
+		name string
+		s    Suggestion
+		want string
+	}{
+		{"curl function", fromFunction("fetcher", `curl "$@"`), "reversible"},
+		{"writer function", fromFunction("writefile", `echo "$1" > "$2"`), "reversible"},
+		{"braced argument", fromFunction("b", `cat "${1}"`), "reversible"},
+		{"shell alias", fromAlias("al", `echo $HOME`), "reversible"},
+		{"function without arguments", fromFunction("where", `pwd`), "read-only"},
+		{"destructive stays destructive", fromFunction("wipe", `rm -rf "$1"`), "destructive"},
+	}
+	for _, c := range cases {
+		if c.s.Recipe.Risk != c.want {
+			t.Errorf("%s: risk %q, want %q", c.name, c.s.Recipe.Risk, c.want)
+		}
+	}
+}
