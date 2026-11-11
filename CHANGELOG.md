@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Fixed
 
 - **Ctrl-C:** interrupting `thine cleanup` or `thine apply` now finishes the item in progress, marks the rest skipped, records an `aborted` operation and exits 130. Interrupting `thine nm reset` restores the previous `node_modules`. Recipes wait for their child and stop before the next step. A second Ctrl-C force-exits.
+- **Recipe arguments:** shortcuts no longer leak a literal `--` into parameters or target programs, so recipes with parameters work through their alias. Functions and shell aliases brought in by `thine import` now receive arguments as `$1`, `$2`…; recipes imported before this fix need `passthrough = true` added, or a fresh import.
 - **`freeup` in agent mode:** `--stop` and `--drop-caches` no longer bypass the plan-only policy. Agent callers get the plan and exit 6 unless the global config sets `[agents.policy] freeup = "allow"`.
 
 ## [0.1.1] - 2026-10-20
