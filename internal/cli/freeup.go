@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,7 +82,7 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 	agentPlan := a.isAgent() && a.Cfg.Agents.Policy.Freeup != "allow"
 	requested := stop != "" || dropCaches
 	needsHuman := agentPlan && (requested || len(cands) > 0)
-	next := freeupNext(stop, dropCaches)
+	next := freeupNext(stop, dropCaches, len(cands))
 
 	if a.json() && (agentPlan || !requested) {
 		cj := []map[string]any{}
@@ -195,11 +196,15 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 	return nil
 }
 
-// freeupNext is the command a human would run to carry out this request.
-func freeupNext(stop string, dropCaches bool) string {
+// freeupNext is the command a human would run to carry out this request. The
+// selection is rebuilt from its parsed form, so caller text never reaches a
+// command someone might paste; an invalid selection is left for them to choose.
+func freeupNext(stop string, dropCaches bool, candidates int) string {
 	next := "thine freeup"
 	if stop != "" {
-		next += " --stop " + ui.Sanitize(stop, 40)
+		if sel, err := ui.ParseSelection(stop, candidates); err == nil {
+			next += " --stop " + canonicalSelection(sel, candidates)
+		}
 	} else if !dropCaches {
 		next += " --stop all"
 	}
@@ -207,6 +212,21 @@ func freeupNext(stop string, dropCaches bool) string {
 		next += " --drop-caches"
 	}
 	return next
+}
+
+// canonicalSelection is the inverse of ui.ParseSelection.
+func canonicalSelection(sel []int, candidates int) string {
+	switch len(sel) {
+	case 0:
+		return "none"
+	case candidates:
+		return "all"
+	}
+	nums := make([]string, len(sel))
+	for i, n := range sel {
+		nums[i] = strconv.Itoa(n + 1)
+	}
+	return strings.Join(nums, ",")
 }
 
 func (a *App) printMemory(s mem.Snapshot) {

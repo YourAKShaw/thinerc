@@ -95,3 +95,27 @@ func TestHumanFreeupUnaffected(t *testing.T) {
 		t.Fatalf("--json: exit %d, want 0", code)
 	}
 }
+
+func TestFreeupNextNeverEchoesRawSelection(t *testing.T) {
+	long := "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22"
+	cases := []struct {
+		stop string
+		drop bool
+		n    int
+		want string
+	}{
+		{"", false, 3, "thine freeup --stop all"},
+		{"", true, 3, "thine freeup --drop-caches"},
+		{"none", false, 3, "thine freeup --stop none"},
+		{"all", true, 3, "thine freeup --stop all --drop-caches"},
+		{"1, 3-4", false, 5, "thine freeup --stop 1,3,4"},
+		{long, false, 30, "thine freeup --stop " + long},
+		{"1;rm -rf ~", false, 3, "thine freeup"},
+		{"$(reboot)", true, 3, "thine freeup --drop-caches"},
+	}
+	for _, c := range cases {
+		if got := freeupNext(c.stop, c.drop, c.n); got != c.want {
+			t.Errorf("freeupNext(%q, %v, %d) = %q, want %q", c.stop, c.drop, c.n, got, c.want)
+		}
+	}
+}
