@@ -15,6 +15,7 @@ import (
 
 	"github.com/YourAKShaw/thinerc/internal/cleanup"
 	"github.com/YourAKShaw/thinerc/internal/config"
+	"github.com/YourAKShaw/thinerc/internal/interrupt"
 	"github.com/YourAKShaw/thinerc/internal/oplog"
 	"github.com/YourAKShaw/thinerc/internal/platform"
 	"github.com/YourAKShaw/thinerc/internal/quarantine"
@@ -302,6 +303,8 @@ func (a *App) applyCleanup(ctx context.Context, plan cleanup.Plan, roots []strin
 	}
 	defer lock.Release()
 
+	release := interrupt.Protect()
+	defer release()
 	opID := plan.ID
 	intent := make([]oplog.Item, 0, len(plan.Items))
 	for _, it := range plan.Items {
@@ -392,6 +395,12 @@ func (a *App) applyCleanup(ctx context.Context, plan cleanup.Plan, roots []strin
 			"quarantined_bytes": quarantined, "outcomes": outs, "exit_code": code}, code)
 	}
 	fmt.Fprintln(t.Out)
+	if code == ExitInterrupted {
+		t.Step(ui.KindWarn, t.Warnc("Interrupted")+t.Muted(fmt.Sprintf(" — finished the item in progress, skipped %s", plural(skipped, "item", "items"))))
+		if freed+quarantined == 0 {
+			return silent(code)
+		}
+	}
 	var msg string
 	switch {
 	case freed > 0 && quarantined > 0:

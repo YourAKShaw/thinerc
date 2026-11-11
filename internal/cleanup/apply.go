@@ -29,9 +29,11 @@ type Hooks struct {
 }
 
 // Apply executes a plan item by item. Each item is re-validated right before
-// it is acted on (S3); a cancelled context stops after the current item (S10).
+// it is acted on (S3); a cancelled context stops after the current item (S10),
+// so each item runs on a context that cancellation can't reach.
 func Apply(ctx context.Context, opID string, p Plan, roots []string, h Hooks) []Outcome {
 	out := make([]Outcome, 0, len(p.Items))
+	work := context.WithoutCancel(ctx)
 	for i, it := range p.Items {
 		if ctx.Err() != nil {
 			out = append(out, Outcome{Item: it, Result: "skipped", Error: "interrupted"})
@@ -40,7 +42,7 @@ func Apply(ctx context.Context, opID string, p Plan, roots []string, h Hooks) []
 		if h.Start != nil {
 			h.Start(it, i, len(p.Items))
 		}
-		o := applyItem(ctx, opID, it, roots, h)
+		o := applyItem(work, opID, it, roots, h)
 		if h.Done != nil {
 			h.Done(o)
 		}
@@ -98,7 +100,7 @@ func applyItem(ctx context.Context, opID string, it Item, roots []string, h Hook
 			_, err = platform.Sudo(ctx, it.Argv...)
 		} else {
 			var r platform.Result
-			r, err = platform.Run(ctx, 10*time.Minute, it.Argv...)
+			r, err = platform.RunDetached(ctx, 10*time.Minute, it.Argv...)
 			if err != nil && len(r.Stderr) > 0 {
 				err = fmt.Errorf("%v: %s", err, lastLine(string(r.Stderr)))
 			}
