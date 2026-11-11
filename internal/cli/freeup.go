@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,6 +43,13 @@ func (a *App) freeupCmd() *cobra.Command {
 	return c
 }
 
+// Seams that let tests supply candidates and record stops without touching
+// the real process table.
+var (
+	freeupProcs = procs.List
+	freeupStop  = (*App).stopProcess
+)
+
 type freeCandidate struct {
 	mem.Consumer
 	targets []procs.Proc
@@ -56,7 +64,7 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		return fail(ExitFailure, "E_RESOLVER", "couldn't read memory — "+err.Error(), "")
 	}
 	sp.Update("Measuring who uses it")
-	all, _ := procs.List()
+	all, _ := freeupProcs()
 	consumers := mem.TopConsumers(all, max(top, 1), a.Cfg.Kill.DevNames, a.Cfg.Freeup.LanguageServers)
 	sp.Stop()
 
@@ -77,13 +85,22 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		}
 	}
 
-	if a.json() && stop == "" && !dropCaches {
+	// The agent gate comes before any selection or sudo path (S1).
+	agentPlan := a.isAgent() && a.Cfg.Agents.Policy.Freeup != "allow"
+	requested := stop != "" || dropCaches
+	needsHuman := agentPlan && (requested || len(cands) > 0)
+	next := freeupNext(stop, dropCaches, len(cands))
+
+	if a.json() && (agentPlan || !requested) {
 		cj := []map[string]any{}
 		for i, c := range cands {
 			cj = append(cj, map[string]any{"index": i + 1, "name": c.Name, "kind": c.Kind, "bytes": c.Bytes, "processes": len(c.targets)})
 		}
-		return a.emitJSON(map[string]any{"memory": before, "top": consumers, "candidates": cj,
-			"next": "thine freeup --stop all"})
+		code := ExitOK
+		if needsHuman {
+			code = ExitNeedsApply
+		}
+		return a.emitJSONCode(map[string]any{"memory": before, "top": consumers, "candidates": cj, "next": next}, code)
 	}
 	if !a.json() {
 		a.printMemory(before)
@@ -110,6 +127,11 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		t.Step(ui.KindOK, t.Muted("no idle dev or language servers to stop — your memory is going to apps you're using"))
 	}
 
+	if needsHuman {
+		t.Note("agent mode: freeup only plans — a human can run `%s`", next)
+		return silent(ExitNeedsApply)
+	}
+
 	// Choose what to stop.
 	var chosen []int
 	switch {
@@ -119,8 +141,6 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		if err != nil {
 			return fail(ExitUsage, "E_USAGE", err.Error(), "freeup --stop 1,3")
 		}
-	case a.isAgent() && a.Cfg.Agents.Policy.Freeup != "allow":
-		t.Note("agent mode: freeup only reports — a human can run `thine freeup --stop all`")
 	case t.Interactive():
 		ans := t.Ask("Stop which? numbers like 1,3 · all · none", "none")
 		chosen, err = ui.ParseSelection(ans, len(cands))
@@ -143,7 +163,7 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 			for _, p := range cands[i].targets {
 				p := p
 				kt := &killTarget{Proc: &p, Members: []procs.Proc{p}, Tier: procs.TierDev}
-				a.stopProcess(kt, grace, killOpts{})
+				freeupStop(a, kt, grace, killOpts{})
 				if kt.logResult() == "done" {
 					stopped++
 				}
@@ -181,6 +201,39 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		}
 	}
 	return nil
+}
+
+// freeupNext is the command a human would run to carry out this request. The
+// selection is rebuilt from its parsed form, so caller text never reaches a
+// command someone might paste; an invalid selection is left for them to choose.
+func freeupNext(stop string, dropCaches bool, candidates int) string {
+	next := "thine freeup"
+	if stop != "" {
+		if sel, err := ui.ParseSelection(stop, candidates); err == nil {
+			next += " --stop " + canonicalSelection(sel, candidates)
+		}
+	} else if !dropCaches {
+		next += " --stop all"
+	}
+	if dropCaches {
+		next += " --drop-caches"
+	}
+	return next
+}
+
+// canonicalSelection is the inverse of ui.ParseSelection.
+func canonicalSelection(sel []int, candidates int) string {
+	switch len(sel) {
+	case 0:
+		return "none"
+	case candidates:
+		return "all"
+	}
+	nums := make([]string, len(sel))
+	for i, n := range sel {
+		nums[i] = strconv.Itoa(n + 1)
+	}
+	return strings.Join(nums, ",")
 }
 
 func (a *App) printMemory(s mem.Snapshot) {
