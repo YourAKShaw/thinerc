@@ -7,7 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Changed
 
 - **`thine run`:** a `--` immediately after the recipe name is now consumed instead of being forwarded. To pass a leading `--` to a recipe with `passthrough = true`, for example so a filename like `-v` isn't read as an option, bind any parameters first and use two separators: `thine run --param name=value <recipe> -- -- -v`. Omit `--param` if the recipe has no parameters. A shell recipe must forward these arguments to its target program.
-- **`thine import`:** shell recipes that take arguments are labelled `reversible` rather than `read-only`, because the caller chooses those arguments. Humans see no change; agents now need approval to run them.
+- **`thine import`:** imported recipes accept arguments, so they are labelled `reversible` at most, never `read-only`, because the caller chooses those arguments. Humans see no change; agents now need approval to run them. Set `risk = "read-only"` on a recipe after reviewing it. Re-importing skips existing recipes, so review any imported plain aliases already labelled `read-only`, and lower the risk of an older recipe when you add `passthrough = true` to it.
 
 ### Fixed
 
