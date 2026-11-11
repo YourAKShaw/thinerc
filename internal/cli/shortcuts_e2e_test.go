@@ -73,11 +73,13 @@ func TestGeneratedShortcutsForwardArgsInRealShells(t *testing.T) {
 					t.Errorf("output lacks %q:\n%s", want, out)
 				}
 			}
-			log, _ := os.ReadFile(s.log)
-			for _, want := range []string{"fetch origin feature/x:feature/x", "checkout feature/x", "branch --set-upstream-to origin/feature/x"} {
-				if !strings.Contains(string(log), want) {
-					t.Errorf("git log lacks %q:\n%s", want, log)
-				}
+			log, err := os.ReadFile(s.log)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "fetch origin feature/x:feature/x\ncheckout feature/x\nbranch --set-upstream-to origin/feature/x\n"
+			if string(log) != want {
+				t.Errorf("git log = %q, want %q", log, want)
 			}
 		})
 	}
