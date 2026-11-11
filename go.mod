@@ -2,7 +2,7 @@ module github.com/YourAKShaw/thinerc
 
 go 1.27.0
 
-toolchain go1.27.2
+toolchain go1.27.4
 
 require (
 	github.com/mattn/go-runewidth v0.0.31
