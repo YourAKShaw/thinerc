@@ -9,8 +9,12 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 )
+
+// streamGrace is how long a cancelled Stream child gets to exit after SIGINT.
+const streamGrace = 5 * time.Second
 
 // ErrNotFound means the executable is not on PATH.
 var ErrNotFound = errors.New("command not found")
@@ -36,6 +40,16 @@ type Result struct {
 // Run executes argv (never through a shell — invariant S5) with a deadline and
 // captures its output. A non-zero exit returns an *ExitError-wrapping error.
 func Run(ctx context.Context, timeout time.Duration, argv ...string) (Result, error) {
+	return run(ctx, timeout, false, argv)
+}
+
+// RunDetached is Run in a new process group, so a terminal Ctrl-C doesn't reach
+// the child. Use it for atomic work that must finish once it has started (S10).
+func RunDetached(ctx context.Context, timeout time.Duration, argv ...string) (Result, error) {
+	return run(ctx, timeout, true, argv)
+}
+
+func run(ctx context.Context, timeout time.Duration, detach bool, argv []string) (Result, error) {
 	if len(argv) == 0 {
 		return Result{}, errors.New("empty argv")
 	}
@@ -51,6 +65,9 @@ func Run(ctx context.Context, timeout time.Duration, argv ...string) (Result, er
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	cmd.Env = append(os.Environ(), "LC_ALL=C", "LANG=C")
+	if detach {
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	}
 	err := cmd.Run()
 	r := Result{Stdout: out.Bytes(), Stderr: errb.Bytes()}
 	if cmd.ProcessState != nil {
@@ -69,7 +86,9 @@ func Output(ctx context.Context, timeout time.Duration, argv ...string) (string,
 }
 
 // Stream runs argv in dir with output streamed to w (both stdout and stderr).
-// Used for long installs where the user should see progress.
+// Used for long installs where the user should see progress. Cancelling ctx
+// sends SIGINT so the tool can stop its own children, then kills it after
+// streamGrace; Stream returns only once the tool has exited.
 func Stream(ctx context.Context, dir string, w io.Writer, argv ...string) (int, error) {
 	if len(argv) == 0 {
 		return -1, errors.New("empty argv")
@@ -80,6 +99,8 @@ func Stream(ctx context.Context, dir string, w io.Writer, argv ...string) (int, 
 	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
 	cmd.Dir = dir
 	cmd.Stdout, cmd.Stderr = w, w
+	cmd.Cancel = func() error { return cmd.Process.Signal(os.Interrupt) }
+	cmd.WaitDelay = streamGrace
 	err := cmd.Run()
 	code := -1
 	if cmd.ProcessState != nil {

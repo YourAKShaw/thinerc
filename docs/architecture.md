@@ -32,7 +32,7 @@ Everything lives under `internal/`; the public contract is the CLI, its exit cod
 
 | Package | Responsibility |
 |---|---|
-| [`cmd/thine`](../cmd/thine/main.go) | Entry point; restores the cursor on Ctrl-C |
+| [`cmd/thine`](../cmd/thine/main.go) | Entry point; installs the signal handling in [`internal/interrupt`](../internal/interrupt/interrupt.go) and restores the cursor on exit |
 | [`internal/cli`](../internal/cli) | Command tree (cobra), global flags, output modes, exit-code mapping, every verb's UX |
 | [`internal/ui`](../internal/ui) | Colour engine (truecolor → 256 → 16), nine themes, gradients, the star spinner, splash, confetti/rain/fireworks, boxes, gauges, prompts, `Sanitize` |
 | [`internal/config`](../internal/config) | Defaults, strict TOML decoding, merge rules, validation, trust store, comment-preserving edits |

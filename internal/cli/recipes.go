@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/YourAKShaw/thinerc/internal/config"
+	"github.com/YourAKShaw/thinerc/internal/interrupt"
 	"github.com/YourAKShaw/thinerc/internal/oplog"
 	"github.com/YourAKShaw/thinerc/internal/platform"
 	"github.com/YourAKShaw/thinerc/internal/recipes"
@@ -117,6 +118,8 @@ func (a *App) runRecipe(cmd *cobra.Command, res recipes.Resolved, yes, dryRun bo
 			return silent(ExitNeedsApply)
 		}
 	}
+	release := interrupt.Protect()
+	defer release()
 	var opID string
 	if risk != "read-only" {
 		opID = oplog.NewID()
@@ -129,12 +132,19 @@ func (a *App) runRecipe(cmd *cobra.Command, res recipes.Resolved, yes, dryRun bo
 		}
 	})
 	last := results[len(results)-1]
+	interrupted := cmd.Context().Err() != nil
 	if opID != "" {
 		result := "completed"
-		if last.Err != nil {
+		switch {
+		case interrupted:
+			result = "aborted"
+		case last.Err != nil:
 			result = "failed"
 		}
 		oplog.Append(oplog.Record{OpID: opID, Phase: "outcome", Verb: "run:" + res.Name, Caller: a.Caller, Result: result})
+	}
+	if interrupted {
+		return silent(ExitInterrupted)
 	}
 	if last.Err != nil {
 		code := last.Code

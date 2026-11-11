@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- **Ctrl-C:** interrupting `thine cleanup` or `thine apply` now finishes the item in progress, marks the rest skipped, records an `aborted` operation and exits 130. Interrupting `thine nm reset` restores the previous `node_modules`. Recipes wait for their child and stop before the next step. A second Ctrl-C force-exits.
+
 ## [0.1.1] - 2026-10-20
 
 First published release. `v0.1.0` was tagged, but its release pipeline failed before publishing, so it has no GitHub Release or archives. The code is identical apart from the fix below.

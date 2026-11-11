@@ -195,3 +195,19 @@ func TestS10_ApplyStopsAfterCancel(t *testing.T) {
 		t.Fatalf("after cancel: %d done, %d skipped; want the current item finished and the rest untouched", done, skipped)
 	}
 }
+
+func TestS10_CancelDuringItemLetsItFinish(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	plan := Plan{Items: []Item{
+		{ID: "slow", Action: ActExec, Argv: []string{"sleep", "0.3"}},
+		{ID: "next", Action: ActExec, Argv: []string{"true"}},
+	}}
+	outs := Apply(ctx, "OPC", plan, nil, Hooks{Start: func(Item, int, int) { cancel() }})
+	if outs[0].Result != "done" {
+		t.Errorf("the running item was cut off: %+v", outs[0])
+	}
+	if outs[1].Result != "skipped" {
+		t.Errorf("the next item should be skipped: %+v", outs[1])
+	}
+}
