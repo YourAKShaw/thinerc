@@ -11,14 +11,40 @@ import (
 
 var stdinReader = bufio.NewReader(os.Stdin)
 
+// promptCancel, once closed, makes pending and future prompts answer "no".
+var promptCancel <-chan struct{}
+
+// CancelPromptsOn stops prompts from blocking on stdin once done is closed, so
+// an interrupt during protected work can't hang on a question.
+func CancelPromptsOn(done <-chan struct{}) { promptCancel = done }
+
 func (t *Term) readLine(prompt string) (string, bool) {
+	select {
+	case <-promptCancel:
+		return "", false
+	default:
+	}
 	fmt.Fprint(t.Err, prompt)
-	line, err := stdinReader.ReadString('\n')
-	if err != nil { // EOF or Ctrl-D means "no"
+	type reply struct {
+		line string
+		err  error
+	}
+	got := make(chan reply, 1)
+	go func() {
+		line, err := stdinReader.ReadString('\n')
+		got <- reply{line, err}
+	}()
+	select {
+	case r := <-got:
+		if r.err != nil { // EOF or Ctrl-D means "no"
+			fmt.Fprintln(t.Err)
+			return "", false
+		}
+		return strings.TrimSpace(r.line), true
+	case <-promptCancel:
 		fmt.Fprintln(t.Err)
 		return "", false
 	}
-	return strings.TrimSpace(line), true
 }
 
 // Confirm asks a [y/N] question. The safe answer (no) is the default, and a

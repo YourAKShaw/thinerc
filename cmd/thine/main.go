@@ -21,6 +21,7 @@ func main() {
 		os.Stderr.WriteString("\r\x1b[2K")
 		os.Exit(cli.ExitInterrupted)
 	})
+	ui.CancelPromptsOn(ctx.Done())
 	code := cli.Execute(ctx, os.Args[1:])
 	ui.RestoreTerminal()
 	os.Exit(code)

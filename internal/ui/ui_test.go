@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"bufio"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -126,5 +128,31 @@ func TestThemesComplete(t *testing.T) {
 	}
 	if ThemeByName("nope").Name != "thine" {
 		t.Error("unknown theme must fall back to thine")
+	}
+}
+
+func TestReadLineStopsWaitingWhenCancelled(t *testing.T) {
+	pr, pw := io.Pipe()
+	defer pw.Close()
+	origReader, origCancel := stdinReader, promptCancel
+	defer func() { stdinReader, promptCancel = origReader, origCancel }()
+	stdinReader = bufio.NewReader(pr)
+	done := make(chan struct{})
+	CancelPromptsOn(done)
+
+	answered := make(chan bool, 1)
+	term := &Term{Err: io.Discard}
+	go func() {
+		_, ok := term.readLine("? ")
+		answered <- ok
+	}()
+	close(done)
+	select {
+	case ok := <-answered:
+		if ok {
+			t.Error("a cancelled prompt must not report an answer")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("prompt kept blocking on stdin after cancellation")
 	}
 }
