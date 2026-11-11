@@ -3,6 +3,7 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -65,12 +66,12 @@ type globalFlags struct {
 	config, theme                                  string
 }
 
-// Execute runs thine and returns the process exit code.
-func Execute(args []string) int {
+// Execute runs thine until ctx is cancelled and returns the process exit code.
+func Execute(ctx context.Context, args []string) int {
 	app := &App{argv: args}
 	root := app.rootCmd()
 	root.SetArgs(args)
-	err := root.Execute()
+	err := root.ExecuteContext(ctx)
 	if err == nil {
 		return ExitOK
 	}

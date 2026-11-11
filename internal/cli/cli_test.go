@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -57,7 +58,7 @@ func run(t *testing.T, env map[string]string, args ...string) (string, int) {
 	os.Stdout = w
 	done := make(chan string)
 	go func() { b, _ := io.ReadAll(r); done <- string(b) }()
-	code := Execute(args)
+	code := Execute(context.Background(), args)
 	w.Close()
 	os.Stdout = orig
 	out := <-done
@@ -225,7 +226,7 @@ func runIn(t *testing.T, home string, env map[string]string, args ...string) (st
 		os.Stdout = w
 		done := make(chan string)
 		go func() { b, _ := io.ReadAll(r); done <- string(b) }()
-		code := Execute(args)
+		code := Execute(context.Background(), args)
 		w.Close()
 		os.Stdout = orig
 		ui.Init(ui.Options{})
