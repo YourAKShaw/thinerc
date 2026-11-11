@@ -145,7 +145,6 @@ func fromAlias(name, value string) Suggestion {
 	r := config.Recipe{Description: value, Alias: s.Name, Passthrough: true, Risk: guessRisk(value)}
 	if metaRE.MatchString(value) {
 		r.Shell = value + ` "$@"`
-		r.Passthrough = false
 		s.Notes = append(s.Notes, "uses shell syntax, so it becomes an unreviewed `shell` recipe")
 	} else {
 		r.Steps = []config.Step{{Run: strings.Fields(value)}}
@@ -167,7 +166,7 @@ func fromFunction(name, body string) Suggestion {
 	if len(desc) > 80 {
 		desc = desc[:77] + "…"
 	}
-	s.Recipe = config.Recipe{Description: desc, Alias: s.Name, Risk: guessRisk(body), Shell: body}
+	s.Recipe = config.Recipe{Description: desc, Alias: s.Name, Passthrough: true, Risk: guessRisk(body), Shell: body}
 	s.Notes = append(s.Notes, "functions become `shell` recipes; arguments arrive as $1, $2… exactly as before")
 	if strings.Contains(body, "[[") || strings.Contains(body, "declare") || strings.Contains(body, "local ") {
 		s.Notes = append(s.Notes, "uses bash-only syntax; recipes run with sh — review before enabling")
