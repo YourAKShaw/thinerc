@@ -137,15 +137,27 @@ func baseSuggestion(name string) Suggestion {
 // shell (a recipe runs in a child process and can't change its parent).
 var shellStateRE = regexp.MustCompile(`^\s*(source|\.|cd|export|exec|unset|alias|eval|pushd|popd|set|declare|typeset)\s`)
 
+// capArgumentRisk keeps imported recipes that accept arguments out of
+// read-only: the caller chooses those arguments, and read-only is what agents
+// may run without approval. `curl` can write or upload, whatever its first
+// word, and no scan of a shell body can prove it ignores its arguments.
+func capArgumentRisk(risk string, s *Suggestion) string {
+	if risk != "read-only" {
+		return risk
+	}
+	s.Notes = append(s.Notes, "accepts arguments, so it is labelled reversible; set risk = \"read-only\" after reviewing it")
+	return "reversible"
+}
+
 func fromAlias(name, value string) Suggestion {
 	s := baseSuggestion(name)
 	if shellStateRE.MatchString(value + " ") {
 		s.Skip = "changes your current shell (source/cd/export…) — keep it as a plain alias"
 	}
 	r := config.Recipe{Description: value, Alias: s.Name, Passthrough: true, Risk: guessRisk(value)}
+	r.Risk = capArgumentRisk(r.Risk, &s)
 	if metaRE.MatchString(value) {
 		r.Shell = value + ` "$@"`
-		r.Passthrough = false
 		s.Notes = append(s.Notes, "uses shell syntax, so it becomes an unreviewed `shell` recipe")
 	} else {
 		r.Steps = []config.Step{{Run: strings.Fields(value)}}
@@ -167,7 +179,8 @@ func fromFunction(name, body string) Suggestion {
 	if len(desc) > 80 {
 		desc = desc[:77] + "…"
 	}
-	s.Recipe = config.Recipe{Description: desc, Alias: s.Name, Risk: guessRisk(body), Shell: body}
+	s.Recipe = config.Recipe{Description: desc, Alias: s.Name, Passthrough: true, Risk: guessRisk(body), Shell: body}
+	s.Recipe.Risk = capArgumentRisk(s.Recipe.Risk, &s)
 	s.Notes = append(s.Notes, "functions become `shell` recipes; arguments arrive as $1, $2… exactly as before")
 	if strings.Contains(body, "[[") || strings.Contains(body, "declare") || strings.Contains(body, "local ") {
 		s.Notes = append(s.Notes, "uses bash-only syntax; recipes run with sh — review before enabling")

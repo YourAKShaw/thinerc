@@ -184,3 +184,46 @@ func TestS10_CancelStopsBeforeNextStep(t *testing.T) {
 		t.Fatalf("want only the running step to complete, got %+v", results)
 	}
 }
+
+func TestImportedShellRecipesReceivePositionalArgs(t *testing.T) {
+	cases := map[string]Suggestion{
+		"function":    fromFunction("fn", `echo "$1"`),
+		"shell alias": fromAlias("al", `echo $HOME`),
+	}
+	for name, s := range cases {
+		res, extra, err := Bind(s.Name, s.Recipe, nil, []string{"a b", "$(reboot)"}, ".")
+		if err != nil || len(extra) != 0 {
+			t.Errorf("%s: err %v, extra %v", name, err, extra)
+			continue
+		}
+		if len(res.Args) != 2 || res.Args[0] != "a b" || res.Args[1] != "$(reboot)" {
+			t.Errorf("%s: args %q", name, res.Args)
+		}
+		if strings.Contains(res.Shell, "reboot") {
+			t.Errorf("%s: an argument reached the script text (S5): %q", name, res.Shell)
+		}
+	}
+}
+
+func TestImportedRecipesAreNeverReadOnly(t *testing.T) {
+	cases := []struct {
+		name string
+		s    Suggestion
+		want string
+	}{
+		{"curl function", fromFunction("fetcher", `curl "$@"`), "reversible"},
+		{"writer function", fromFunction("writefile", `echo "$1" > "$2"`), "reversible"},
+		{"braced argument", fromFunction("b", `cat "${1}"`), "reversible"},
+		{"shell alias", fromAlias("al", `echo $HOME`), "reversible"},
+		{"plain-step alias", fromAlias("c", `curl`), "reversible"},
+		{"argument count only", fromFunction("n", `echo "$#"`), "reversible"},
+		{"implicit iteration", fromFunction("it", `cat /dev/null; for arg; do eval "$arg"; done`), "reversible"},
+		{"no visible arguments", fromFunction("where", `pwd`), "reversible"},
+		{"destructive stays destructive", fromFunction("wipe", `rm -rf "$1"`), "destructive"},
+	}
+	for _, c := range cases {
+		if c.s.Recipe.Risk != c.want {
+			t.Errorf("%s: risk %q, want %q", c.name, c.s.Recipe.Risk, c.want)
+		}
+	}
+}

@@ -4,9 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- **`thine run`:** a `--` immediately after the recipe name is now consumed instead of being forwarded. To pass a leading `--` to a recipe with `passthrough = true`, for example so a filename like `-v` isn't read as an option, bind any parameters first and use two separators: `thine run --param name=value <recipe> -- -- -v`. Omit `--param` if the recipe has no parameters. A shell recipe must forward these arguments to its target program.
+- **`thine import`:** imported recipes accept arguments, so recipes otherwise labelled `read-only` are labelled `reversible` instead. Other labels, including `destructive`, remain unchanged. Unless agent policy allows all recipes, agents cannot run these recipes directly. Set `risk = "read-only"` only after confirming that caller-supplied arguments cannot cause writes. Re-importing skips existing recipes, so review imported plain aliases already labelled `read-only`. When adding `passthrough = true` to an older recipe, change its `read-only` label to `reversible` or a higher risk unless review confirms that its arguments cannot cause writes.
+
 ### Fixed
 
 - **Ctrl-C:** interrupting `thine cleanup` or `thine apply` now finishes the item in progress, marks the rest skipped, records an `aborted` operation and exits 130. Interrupting `thine nm reset` restores the previous `node_modules`. Recipes wait for their child and stop before the next step. A second Ctrl-C force-exits.
+- **Recipe arguments:** shortcuts no longer leak a literal `--` into parameters or target programs, so recipes with parameters work through their alias. Functions and shell aliases brought in by `thine import` now receive arguments as `$1`, `$2`…; recipes imported before this fix need `passthrough = true` added, or a fresh import.
 - **`freeup` in agent mode:** `--stop` and `--drop-caches` no longer bypass the plan-only policy. Agent callers get the plan and exit 6 unless the global config sets `[agents.policy] freeup = "allow"`.
 
 ## [0.1.1] - 2026-10-20
