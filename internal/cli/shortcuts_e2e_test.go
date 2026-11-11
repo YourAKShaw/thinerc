@@ -68,7 +68,9 @@ func TestGeneratedShortcutsForwardArgsInRealShells(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%v\n%s", err, out)
 			}
-			for _, want := range []string{"args:two words:b", "al x y", "P -- x y", "my dir/sub"} {
+			// du prints a tab before each path, which keeps the explicit-path call
+			// and the default-path call distinguishable.
+			for _, want := range []string{"args:two words:b", "al x y", "P -- x y", "\tmy dir/sub", "\t./my dir/sub"} {
 				if !strings.Contains(out, want) {
 					t.Errorf("output lacks %q:\n%s", want, out)
 				}
