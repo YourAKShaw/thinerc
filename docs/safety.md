@@ -30,7 +30,7 @@ Every action carries one of four risk levels, and the level decides how much con
 
 | ID | Invariant | Enforced in | Test |
 |---|---|---|---|
-| **S1** | No state change without a plan you can see. With no terminal and no `--apply`, thine prints the plan and exits 6. The one exception: stopping your own dev processes on ports you *named* — the command line is the plan, so `killfb && pnpm dev` works in scripts. | `cli` decision points | `TestS1_AgentModeOnlyPlans` |
+| **S1** | No state change without a plan you can see. With no terminal and no `--apply`, thine prints the plan and exits 6. The one exception: stopping your own dev processes on ports you *named* — the command line is the plan, so `killfb && pnpm dev` works in scripts. `freeup --stop` from a human follows the same rule: the explicit selection is the plan, so it needs no `--apply`. | `cli` decision points | `TestS1_AgentModeOnlyPlans` |
 | **S2** | File targets are canonical, strictly inside an allowlisted root, outside the deny-list (`~/.ssh`, keychains, `/etc`, `/usr`, thine's own state…), never `.git`, and never reached through a symlink. A symlink item is handled as a link. | `cleanup.Guard` — the single choke point | `TestS2_GuardRejectsEscapes`, `FuzzGuard` |
 | **S3** | Each item is re-validated **immediately** before acting: files by device + inode + mode + mtime, processes by PID + start time. A mismatch means *skip and report*, never "best effort". | `cleanup.Revalidate`, `procs.Signal` | `TestS3_ApplySkipsChangedItems`, `TestS3_SignalRefusesReusedIdentity` |
 | **S4** | Signals go only to planned identities. Never PID 1, never thine's own ancestors (your shell, terminal, editor), never system daemons, never another user's process without `--sudo`. | `procs.Policy.Classify`, `procs.Signal` | `TestS4_ClassifyProtectsSystemAndAncestors` |
@@ -69,6 +69,7 @@ AI agents call thine too. When `THINE_AGENT=1`, or an agent's environment marker
 
 - read-only verbs, `--json` output and dev-tier kills on configured groups work normally;
 - cleanup, freeup, `nm reset`, non-read-only recipes and confirm-tier kills only **plan** (exit 6), and cleanup plans are saved;
+- `freeup --stop` and `freeup --drop-caches` are planned like everything else, unless the global config sets `[agents.policy] freeup = "allow"`; a project config can't change that;
 - a human applies a saved plan with `thine apply <plan-id>`; `apply`, `trust` and `trash purge` refuse agent callers.
 
 Agent mode is **defence-in-depth, not a security boundary**: a compromised agent can unset variables or run `rm` itself. The agent's own sandbox is the real boundary. thine's job is to make the safe path the easy path.
