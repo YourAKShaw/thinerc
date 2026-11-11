@@ -66,7 +66,7 @@ func (a *App) runCmd() *cobra.Command {
 				kv[k] = v
 			}
 			cwd, _ := os.Getwd()
-			res, extra, err := recipes.Bind(name, r, kv, args[1:], recipes.ProjectRoot(cwd))
+			res, extra, err := recipes.Bind(name, r, kv, dropSeparator(args[1:]), recipes.ProjectRoot(cwd))
 			if err != nil {
 				return fail(ExitUsage, "E_USAGE", err.Error(), "thine recipes show "+name)
 			}
@@ -85,6 +85,15 @@ func (a *App) runCmd() *cobra.Command {
 	c.Flags().BoolVarP(&yes, "yes", "y", false, "skip confirmation for regenerable/destructive recipes")
 	c.Flags().BoolVar(&dryRun, "dry-run", false, "show what would run")
 	return c
+}
+
+// dropSeparator removes one leading "--", which generated shortcuts always
+// send. Later ones belong to the target program.
+func dropSeparator(args []string) []string {
+	if len(args) > 0 && args[0] == "--" {
+		return args[1:]
+	}
+	return args
 }
 
 func (a *App) runRecipe(cmd *cobra.Command, res recipes.Resolved, yes, dryRun bool) error {
