@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- **`thine run`:** the first `--` after the recipe name is now consumed instead of being forwarded. To pass a leading `--` to the target program, for example so a filename like `-v` isn't read as an option, use two: `thine run <recipe> -- -- -v`.
+
 ### Fixed
 
 - **Ctrl-C:** interrupting `thine cleanup` or `thine apply` now finishes the item in progress, marks the rest skipped, records an `aborted` operation and exits 130. Interrupting `thine nm reset` restores the previous `node_modules`. Recipes wait for their child and stop before the next step. A second Ctrl-C force-exits.
