@@ -205,7 +205,7 @@ func TestImportedShellRecipesReceivePositionalArgs(t *testing.T) {
 	}
 }
 
-func TestImportedShellRecipesWithArgsAreNotReadOnly(t *testing.T) {
+func TestImportedRecipesAreNeverReadOnly(t *testing.T) {
 	cases := []struct {
 		name string
 		s    Suggestion
@@ -215,7 +215,10 @@ func TestImportedShellRecipesWithArgsAreNotReadOnly(t *testing.T) {
 		{"writer function", fromFunction("writefile", `echo "$1" > "$2"`), "reversible"},
 		{"braced argument", fromFunction("b", `cat "${1}"`), "reversible"},
 		{"shell alias", fromAlias("al", `echo $HOME`), "reversible"},
-		{"function without arguments", fromFunction("where", `pwd`), "read-only"},
+		{"plain-step alias", fromAlias("c", `curl`), "reversible"},
+		{"argument count only", fromFunction("n", `echo "$#"`), "reversible"},
+		{"implicit iteration", fromFunction("it", `cat /dev/null; for arg; do eval "$arg"; done`), "reversible"},
+		{"no visible arguments", fromFunction("where", `pwd`), "reversible"},
 		{"destructive stays destructive", fromFunction("wipe", `rm -rf "$1"`), "destructive"},
 	}
 	for _, c := range cases {
