@@ -77,13 +77,22 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		}
 	}
 
-	if a.json() && stop == "" && !dropCaches {
+	// The agent gate comes before any selection or sudo path (S1).
+	agentPlan := a.isAgent() && a.Cfg.Agents.Policy.Freeup != "allow"
+	requested := stop != "" || dropCaches
+	needsHuman := agentPlan && (requested || len(cands) > 0)
+	next := freeupNext(stop, dropCaches)
+
+	if a.json() && (agentPlan || !requested) {
 		cj := []map[string]any{}
 		for i, c := range cands {
 			cj = append(cj, map[string]any{"index": i + 1, "name": c.Name, "kind": c.Kind, "bytes": c.Bytes, "processes": len(c.targets)})
 		}
-		return a.emitJSON(map[string]any{"memory": before, "top": consumers, "candidates": cj,
-			"next": "thine freeup --stop all"})
+		code := ExitOK
+		if needsHuman {
+			code = ExitNeedsApply
+		}
+		return a.emitJSONCode(map[string]any{"memory": before, "top": consumers, "candidates": cj, "next": next}, code)
 	}
 	if !a.json() {
 		a.printMemory(before)
@@ -110,6 +119,11 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		t.Step(ui.KindOK, t.Muted("no idle dev or language servers to stop — your memory is going to apps you're using"))
 	}
 
+	if needsHuman {
+		t.Note("agent mode: freeup only plans — a human can run `%s`", next)
+		return silent(ExitNeedsApply)
+	}
+
 	// Choose what to stop.
 	var chosen []int
 	switch {
@@ -119,8 +133,6 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		if err != nil {
 			return fail(ExitUsage, "E_USAGE", err.Error(), "freeup --stop 1,3")
 		}
-	case a.isAgent() && a.Cfg.Agents.Policy.Freeup != "allow":
-		t.Note("agent mode: freeup only reports — a human can run `thine freeup --stop all`")
 	case t.Interactive():
 		ans := t.Ask("Stop which? numbers like 1,3 · all · none", "none")
 		chosen, err = ui.ParseSelection(ans, len(cands))
@@ -181,6 +193,20 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		}
 	}
 	return nil
+}
+
+// freeupNext is the command a human would run to carry out this request.
+func freeupNext(stop string, dropCaches bool) string {
+	next := "thine freeup"
+	if stop != "" {
+		next += " --stop " + ui.Sanitize(stop, 40)
+	} else if !dropCaches {
+		next += " --stop all"
+	}
+	if dropCaches {
+		next += " --drop-caches"
+	}
+	return next
 }
 
 func (a *App) printMemory(s mem.Snapshot) {
