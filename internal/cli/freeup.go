@@ -43,6 +43,13 @@ func (a *App) freeupCmd() *cobra.Command {
 	return c
 }
 
+// Seams that let tests supply candidates and record stops without touching
+// the real process table.
+var (
+	freeupProcs = procs.List
+	freeupStop  = (*App).stopProcess
+)
+
 type freeCandidate struct {
 	mem.Consumer
 	targets []procs.Proc
@@ -57,7 +64,7 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 		return fail(ExitFailure, "E_RESOLVER", "couldn't read memory — "+err.Error(), "")
 	}
 	sp.Update("Measuring who uses it")
-	all, _ := procs.List()
+	all, _ := freeupProcs()
 	consumers := mem.TopConsumers(all, max(top, 1), a.Cfg.Kill.DevNames, a.Cfg.Freeup.LanguageServers)
 	sp.Stop()
 
@@ -156,7 +163,7 @@ func (a *App) runFreeup(ctx context.Context, stop string, dropCaches, yes bool, 
 			for _, p := range cands[i].targets {
 				p := p
 				kt := &killTarget{Proc: &p, Members: []procs.Proc{p}, Tier: procs.TierDev}
-				a.stopProcess(kt, grace, killOpts{})
+				freeupStop(a, kt, grace, killOpts{})
 				if kt.logResult() == "done" {
 					stopped++
 				}

@@ -5,13 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/YourAKShaw/thinerc/internal/platform"
+	"github.com/YourAKShaw/thinerc/internal/procs"
 )
 
-// These tests deliberately never pass `--stop all` or a number: the real
-// process table is in play, and a broken gate must not stop a developer's
-// servers. `--stop none` can't signal anything on any code path, yet still
+// Tests that read the real process table never pass `--stop all` or a number,
+// because a broken gate must not stop a developer's servers. `--stop none` can't signal anything on any code path, yet still
 // reveals a misplaced gate through its exit code.
 
 // fakeSudo puts a logging sudo first on PATH and returns the log's path.
@@ -20,7 +21,7 @@ func fakeSudo(t *testing.T) (env map[string]string, log string) {
 	bin := t.TempDir()
 	log = filepath.Join(bin, "sudo.log")
 	script := "#!/bin/sh\necho \"$@\" >> '" + log + "'\n"
-	if err := os.WriteFile(filepath.Join(bin, "sudo"), []byte(script), 0o755); err != nil {
+	if err := os.WriteFile(filepath.Join(bin, "sudo"), []byte(script), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	return map[string]string{"THINE_AGENT": "1", "PATH": bin + string(os.PathListSeparator) + os.Getenv("PATH")}, log
@@ -117,5 +118,59 @@ func TestFreeupNextNeverEchoesRawSelection(t *testing.T) {
 		if got := freeupNext(c.stop, c.drop, c.n); got != c.want {
 			t.Errorf("freeupNext(%q, %v, %d) = %q, want %q", c.stop, c.drop, c.n, got, c.want)
 		}
+	}
+}
+
+// syntheticCandidate replaces the process table with one dev server that can't
+// exist, and returns a count of the stops requested.
+func syntheticCandidate(t *testing.T) *int {
+	t.Helper()
+	origProcs, origStop := freeupProcs, freeupStop
+	t.Cleanup(func() { freeupProcs, freeupStop = origProcs, origStop })
+	fake := procs.Proc{Identity: procs.Identity{PID: 99999999}, UID: procs.Self(), Name: "node", RSS: 1 << 30}
+	freeupProcs = func() ([]procs.Proc, error) { return []procs.Proc{fake}, nil }
+	stops := 0
+	freeupStop = func(*App, *killTarget, time.Duration, killOpts) { stops++ }
+	return &stops
+}
+
+func TestS1_AgentFreeupStopAllSignalsNothing(t *testing.T) {
+	stops := syntheticCandidate(t)
+	for _, sel := range []string{"all", "1"} {
+		if _, code := run(t, map[string]string{"THINE_AGENT": "1"}, "freeup", "--stop", sel); code != ExitNeedsApply {
+			t.Fatalf("--stop %s: exit %d, want %d", sel, code, ExitNeedsApply)
+		}
+	}
+	if *stops != 0 {
+		t.Fatalf("agent mode requested %d stops", *stops)
+	}
+}
+
+func TestS1_AgentFreeupWithCandidatesExitsSix(t *testing.T) {
+	stops := syntheticCandidate(t)
+	out, code := run(t, map[string]string{"THINE_AGENT": "1"}, "freeup", "--json")
+	var doc struct {
+		Candidates []any  `json:"candidates"`
+		Next       string `json:"next"`
+	}
+	if err := json.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatalf("not JSON: %v\n%s", err, out)
+	}
+	if code != ExitNeedsApply || len(doc.Candidates) != 1 || doc.Next != "thine freeup --stop all" {
+		t.Fatalf("exit %d, doc %+v", code, doc)
+	}
+	if *stops != 0 {
+		t.Fatalf("agent mode requested %d stops", *stops)
+	}
+}
+
+// Proves the synthetic candidate is one freeup would really stop.
+func TestHumanFreeupStopAllStopsCandidate(t *testing.T) {
+	stops := syntheticCandidate(t)
+	if _, code := run(t, nil, "freeup", "--stop", "all"); code != ExitOK {
+		t.Fatalf("exit %d, want 0", code)
+	}
+	if *stops != 1 {
+		t.Fatalf("stops = %d, want 1", *stops)
 	}
 }
