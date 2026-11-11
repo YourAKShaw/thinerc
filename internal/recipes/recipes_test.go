@@ -175,3 +175,12 @@ func show(r config.Recipe) string {
 	}
 	return out
 }
+
+func TestS10_CancelStopsBeforeNextStep(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	res := Resolved{Name: "two", Steps: [][]string{{"true"}, {"false"}}}
+	results := Run(ctx, res, func(int, string) { cancel() })
+	if len(results) != 1 || results[0].Err != nil {
+		t.Fatalf("want only the running step to complete, got %+v", results)
+	}
+}
