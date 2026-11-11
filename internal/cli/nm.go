@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/YourAKShaw/thinerc/internal/cleanup"
+	"github.com/YourAKShaw/thinerc/internal/interrupt"
 	"github.com/YourAKShaw/thinerc/internal/oplog"
 	"github.com/YourAKShaw/thinerc/internal/platform"
 	"github.com/YourAKShaw/thinerc/internal/procs"
@@ -181,6 +182,8 @@ func (a *App) runNMReset(ctx context.Context, yes, frozen, purgeOld bool) error 
 		return fail(ExitLocked, "E_LOCKED", err.Error(), "")
 	}
 	defer lk.Release()
+	release := interrupt.Protect()
+	defer release()
 	opID := oplog.NewID()
 	var items []oplog.Item
 	for _, d := range dirs {
@@ -209,6 +212,9 @@ func (a *App) runNMReset(ctx context.Context, yes, frozen, purgeOld bool) error 
 			cleanup.RemoveTrashedDir(opID+"-failed", d)
 		}
 		res, rerr := quarantine.Restore(opID, nil)
+		if ctx.Err() != nil {
+			return a.finishInterruptedReset(opID, items, len(res), rerr)
+		}
 		oplog.Append(oplog.Record{OpID: opID, Phase: "outcome", Verb: "nm-reset", Caller: a.Caller, Items: items, Result: "partial"})
 		t.Step(ui.KindFail, t.Bad(fmt.Sprintf("%s exited %d", argv[0], code))+t.Muted(fmt.Sprintf(" — restored %d previous node_modules", len(res))))
 		if rerr != nil {
@@ -227,6 +233,25 @@ func (a *App) runNMReset(ctx context.Context, yes, frozen, purgeOld bool) error 
 		t.Sub(t.Muted(fmt.Sprintf("old tree (%s) kept in quarantine · `thine undo %s` to roll back", ui.HumanBytes(total), opID[:10])))
 	}
 	return nil
+}
+
+// finishInterruptedReset records a rollback caused by Ctrl-C. Restored items
+// are no longer undoable; if the restore failed they stay in quarantine, so
+// they keep their "done" result and `thine undo` can still reach them.
+func (a *App) finishInterruptedReset(opID string, items []oplog.Item, restored int, rerr error) error {
+	t := a.T
+	if rerr == nil {
+		for i := range items {
+			items[i].Result, items[i].Error = "skipped", "interrupted; restored"
+		}
+	}
+	oplog.Append(oplog.Record{OpID: opID, Phase: "outcome", Verb: "nm-reset", Caller: a.Caller, Items: items, Result: "aborted"})
+	t.Step(ui.KindWarn, t.Warnc("Interrupted")+t.Muted(fmt.Sprintf(" — restored %d previous node_modules", restored)))
+	if rerr != nil {
+		t.Warn("restore problem: %v", rerr)
+	}
+	t.Sub(t.Muted("the partial install is kept for inspection: `thine trash ls`"))
+	return silent(ExitInterrupted)
 }
 
 // prefixWriter indents a subprocess's output and strips its escape codes so
