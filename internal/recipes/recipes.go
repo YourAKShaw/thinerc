@@ -181,21 +181,27 @@ type StepResult struct {
 // failure unless the step sets continue_on_error.
 func Run(ctx context.Context, r Resolved, onStep func(i int, cmd string)) []StepResult {
 	var out []StepResult
+	// The child shares our terminal and gets Ctrl-C itself, so wait for it and
+	// only use a cancelled ctx to stop before the next step (S10).
+	work := context.WithoutCancel(ctx)
 	if r.Shell != "" {
 		// Positional args, never interpolated: sh -c '<script>' thine-recipe "$1" "$2"…
 		argv := append([]string{"sh", "-c", r.Shell, "thine-recipe"}, r.Args...)
 		if onStep != nil {
 			onStep(0, r.Commands()[0])
 		}
-		code, err := platform.Interactive(ctx, r.Dir, r.Env, argv...)
+		code, err := platform.Interactive(work, r.Dir, r.Env, argv...)
 		return append(out, StepResult{Command: r.Commands()[0], Code: code, Err: exitErr(code, err)})
 	}
 	for i, st := range r.Steps {
+		if i > 0 && ctx.Err() != nil {
+			break
+		}
 		cmd := strings.Join(quoteAll(st), " ")
 		if onStep != nil {
 			onStep(i, cmd)
 		}
-		code, err := platform.Interactive(ctx, r.Dir, r.Env, st...)
+		code, err := platform.Interactive(work, r.Dir, r.Env, st...)
 		res := StepResult{Command: cmd, Code: code, Err: exitErr(code, err)}
 		out = append(out, res)
 		cont := i < len(r.Recipe.Steps) && r.Recipe.Steps[i].ContinueOnError
