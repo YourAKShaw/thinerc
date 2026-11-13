@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package netfetch is the ONLY package allowed to touch the network
 // (invariant S11, enforced by scripts/check-boundaries.sh). It is used solely
 // by commands the user runs explicitly, such as `thine fonts install`, and it

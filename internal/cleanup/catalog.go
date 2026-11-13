@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package cleanup plans and applies disk reclamation from a data-driven
 // catalog. Caches are cleaned by their owning tool's own command; user files
 // are quarantined (undoable); nothing outside an allowlisted root is touched.

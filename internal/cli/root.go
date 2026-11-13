@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package cli wires thine's command tree: global flags, configuration, output
 // mode and the stable exit codes in docs/reference/exit-codes.md.
 package cli

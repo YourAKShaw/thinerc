@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package fonts knows the terminal fonts thine recommends: pinned Nerd Fonts
 // releases (ligatures + icon glyphs) and which ones have true or cursive
 // italics, plus how to tell each terminal emulator to use them.

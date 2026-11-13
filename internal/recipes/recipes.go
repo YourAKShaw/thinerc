@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package recipes runs typed, declarative user verbs — "much higher-level
 // aliases" with parameters, risk labels and per-OS variants (plan §7.9).
 // Parameters are validated and substituted only inside argv elements; a

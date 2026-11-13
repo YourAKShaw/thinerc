@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package ports answers "who is listening on this TCP port?" — from /proc on
 // Linux (no subprocess) and from one machine-readable lsof call on macOS.
 package ports

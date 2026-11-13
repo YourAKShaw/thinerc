@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package oplog is thine's write-ahead operations log (invariant S7): an
 // "intent" record is fsynced before any state change and an "outcome" record
 // after it, so even a crash leaves evidence that `thine history` can show.

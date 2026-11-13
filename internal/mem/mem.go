@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package mem reports memory honestly: *available* memory and pressure, not
 // the "free" number that cache-dropping scripts inflate (ADR-0005).
 package mem

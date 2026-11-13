@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package procs inspects and signals processes. A process is addressed by its
 // Identity — PID plus start time — so a recycled PID is never signalled
 // (invariant S3/S4).

@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package platform isolates everything OS-shaped: paths, subprocesses, sudo,
 // locks and environment detection. Domain packages never branch on GOOS.
 package platform
