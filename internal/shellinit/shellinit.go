@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package shellinit emits the tiny, static shell glue that `eval "$(thine init
 // zsh)"` loads: guarded one-line functions that call the binary. No hooks, no
 // prompt code, nothing that runs per command (ADR-0002).

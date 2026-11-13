@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright 2026 Ayush Kumar Shaw
+# SPDX-License-Identifier: Apache-2.0
 # thine installer — short enough to read before you run it.
 #
 #   curl -fsSL https://raw.githubusercontent.com/YourAKShaw/thinerc/main/scripts/install.sh | sh

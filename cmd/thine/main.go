@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Command thine is the safe, animated verbs layer for your terminal.
 package main
 

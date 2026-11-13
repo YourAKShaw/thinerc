@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright 2026 Ayush Kumar Shaw
+# SPDX-License-Identifier: Apache-2.0
 # Commit message check: fail when a commit breaks the convention in .github/CONTRIBUTING.md.
 #   - header: <type>(<scope>)[!]: <gitmoji> <summary of at most 72 characters>
 #   - a blank line, then a body explaining why

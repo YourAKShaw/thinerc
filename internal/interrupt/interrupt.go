@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package interrupt decides what a termination signal means right now (S10).
 // Outside a protected section it ends the process at once. Inside one, the
 // first signal cancels a context so the work can stop at a safe point, and a

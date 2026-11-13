@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package config loads thine's TOML configuration: built-in defaults, the
 // user's global file, and — only once trusted — a project's .thinerc.toml.
 package config

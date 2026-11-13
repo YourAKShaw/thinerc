@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package quarantine is thine's undo buffer: user files are moved (atomic,
 // same-filesystem rename) instead of deleted, kept for a retention period,
 // and restorable with `thine undo` (plan §6.5).

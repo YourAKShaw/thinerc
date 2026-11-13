@@ -1,3 +1,6 @@
+// Copyright 2026 Ayush Kumar Shaw
+// SPDX-License-Identifier: Apache-2.0
+
 // Package ui renders everything thine shows a human: colour, gradients, icons,
 // the Claude-style star spinner, the animated splash and celebration effects.
 //
