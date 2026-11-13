@@ -97,6 +97,7 @@ These are enforced by `make lint` and CI, not just written down:
 | `sh -c` only in `internal/recipes` | Shell is explicit and labelled, parameters are positional |
 | Every invariant S1–S12 has a `TestS<n>_…` | Safety claims stay tested |
 | `thine init` prints nothing but shell code | Compatible with instant prompts; zero startup noise |
+| Every `.go` and `.sh` file starts with `// Copyright <year> Ayush Kumar Shaw` and `// SPDX-License-Identifier: Apache-2.0` (`#` in scripts, below the shebang) | Credit and license travel with any file copied out of the repo |
 
 ## ✍️ Commit messages
 
