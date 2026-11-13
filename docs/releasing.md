@@ -25,7 +25,7 @@ Releases are cut from `main` by pushing a `vX.Y.Z` tag. [`release.yml`](../.gith
 
 1. **tag** — refuses tags without a matching `CHANGELOG.md` section.
 2. **ci** — re-runs the full CI workflow on the tagged commit.
-3. **build** — deterministic `tar.gz` archives for `linux_amd64`, `linux_arm64`, `darwin_amd64`, `darwin_arm64` (binary + LICENSE + README + CHANGELOG), `install.sh`, and `checksums.txt`; then **build-provenance attestations** via GitHub OIDC.
+3. **build** — deterministic `tar.gz` archives for `linux_amd64`, `linux_arm64`, `darwin_amd64`, `darwin_arm64` (binary + LICENSE + NOTICE + README + CHANGELOG), `install.sh`, and `checksums.txt`; then **build-provenance attestations** via GitHub OIDC.
 4. **verify** — each archive is checksum-verified and executed on a native runner.
 5. **github-release** — creates the release with notes taken from the changelog.
 
