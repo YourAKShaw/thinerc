@@ -7,7 +7,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-8B5CF6?style=flat-square)](https://github.com/YourAKShaw/thinerc/pulls)
 [![Go 1.27](https://img.shields.io/badge/Go-1.27-334155?style=flat-square)](https://go.dev/)
 [![Conventional Commits + gitmoji](https://img.shields.io/badge/Conventional%20Commits-%2B%20gitmoji-8B5CF6?style=flat-square)](https://www.conventionalcommits.org/en/v1.0.0/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-8B5CF6?style=flat-square)](../LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-8B5CF6?style=flat-square)](../LICENSE)
 
 [Project overview](../README.md) · [Architecture](../docs/architecture.md) · [Safety model](../docs/safety.md) · [Get help](SUPPORT.md) · [Security policy](SECURITY.md)
 
