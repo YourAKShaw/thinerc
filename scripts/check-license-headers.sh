@@ -7,7 +7,16 @@
 set -eu
 cd "$(dirname "$0")/.."
 fail=0
+checked=0
+# Tracked paths are relative, so a leading '/' can never be a real file.
+sentinel='/git-ls-files-failed'
 while IFS= read -r -d '' f; do
+	if [ "$f" = "$sentinel" ]; then
+		echo "✖ git ls-files failed; no headers were checked"
+		fail=1
+		continue
+	fi
+	checked=$((checked + 1))
 	case "$f" in
 	*.go) c='//' ;;
 	*) c='#' ;;
@@ -18,6 +27,10 @@ while IFS= read -r -d '' f; do
 		echo "✖ $f: missing copyright or SPDX header"
 		fail=1
 	fi
-done < <(git ls-files -z -- '*.go' '*.sh')
+done < <(git ls-files -z -- '*.go' '*.sh' || printf '%s\0' "$sentinel")
+if [ "$checked" -eq 0 ] && [ "$fail" -eq 0 ]; then
+	echo "✖ no tracked .go or .sh files found; refusing to pass"
+	fail=1
+fi
 [ "$fail" -eq 0 ] && echo "✔ every source file has a license header"
 exit "$fail"
