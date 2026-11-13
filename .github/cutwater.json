@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "skillVersion": "0.1.0",
   "createdAt": "2026-11-13T01:22:20Z",
-  "updatedAt": "2026-11-13T01:22:20Z",
+  "updatedAt": "2026-11-13T02:18:47Z",
   "repo": "YourAKShaw/thinerc",
   "defaultBranch": "main",
   "choices": {
@@ -18,7 +18,7 @@
     "dependencyBot": "dependabot",
     "wiki": false,
     "projectsBoard": null,
-    "ruleset": false,
+    "ruleset": true,
     "emojiLabels": false,
     "acceptOrgDefaults": false,
     "copyrightYear": "2026",
@@ -53,6 +53,6 @@
       "type: style",
       "type: test"
     ],
-    "rulesetId": null
+    "rulesetId": 27172165
   }
 }
