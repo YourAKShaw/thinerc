@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright 2026 Ayush Kumar Shaw
+# SPDX-License-Identifier: Apache-2.0
 # Architectural fitness functions: fail the build when a safety boundary leaks.
 #   - net/http is imported only by internal/netfetch (no hidden network calls)
 #   - os/exec is used only by internal/platform (every subprocess goes through one argv wrapper)

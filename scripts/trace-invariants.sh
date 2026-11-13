@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright 2026 Ayush Kumar Shaw
+# SPDX-License-Identifier: Apache-2.0
 # Traceability fitness function: every safety invariant S1–S12 from
 # docs/safety.md must have at least one test named TestS<n>_…
 set -eu
