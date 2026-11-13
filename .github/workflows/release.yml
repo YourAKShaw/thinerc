@@ -79,10 +79,10 @@ jobs:
             dir="build/thine_${VERSION}_${os}_${arch}"
             mkdir -p "$dir"
             GOOS="$os" GOARCH="$arch" go build -trimpath -ldflags "$ldflags" -o "$dir/thine" ./cmd/thine
-            cp LICENSE README.md CHANGELOG.md "$dir/"
+            cp LICENSE NOTICE README.md CHANGELOG.md "$dir/"
             # Deterministic tarballs: fixed owner, order and mtime.
             tar --sort=name --owner=0 --group=0 --numeric-owner --mtime="$date" \
-              -C "$dir" -czf "release/thine_${VERSION}_${os}_${arch}.tar.gz" thine LICENSE README.md CHANGELOG.md
+              -C "$dir" -czf "release/thine_${VERSION}_${os}_${arch}.tar.gz" thine LICENSE NOTICE README.md CHANGELOG.md
           done
           cp scripts/install.sh release/install.sh
           (cd release && sha256sum thine_*.tar.gz install.sh > checksums.txt && cat checksums.txt)
