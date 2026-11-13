@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/YourAKShaw/CutWater/main/skills/cutwater/assets/manifest.schema.json",
+  "schemaVersion": 1,
+  "skillVersion": "0.1.0",
+  "createdAt": "2026-11-13T01:22:20Z",
+  "updatedAt": "2026-11-13T01:22:20Z",
+  "repo": "YourAKShaw/thinerc",
+  "defaultBranch": "main",
+  "choices": {
+    "visibility": "public",
+    "stack": "go",
+    "license": "Apache-2.0",
+    "ci": [
+      "lint",
+      "test",
+      "build"
+    ],
+    "dependencyBot": "dependabot",
+    "wiki": false,
+    "projectsBoard": null,
+    "ruleset": false,
+    "emojiLabels": false,
+    "acceptOrgDefaults": false,
+    "copyrightYear": "2026",
+    "copyrightHolder": "Ayush Kumar Shaw",
+    "maintainer": "YourAKShaw",
+    "securityContact": ""
+  },
+  "applied": {
+    "files": {
+      "CODE_OF_CONDUCT.md": {
+        "template": "community/CODE_OF_CONDUCT.md",
+        "sha256": "c8cc5bd8d1caae80bb9fb0ad1ffb93cc98da6e5af3c581462c228f3e52cac68d"
+      }
+    },
+    "labels": [
+      "priority: p0",
+      "priority: p1",
+      "priority: p2",
+      "priority: p3",
+      "scope-change",
+      "status: blocked",
+      "status: in-progress",
+      "status: needs-review",
+      "type: build",
+      "type: chore",
+      "type: ci",
+      "type: docs",
+      "type: feat",
+      "type: fix",
+      "type: perf",
+      "type: refactor",
+      "type: style",
+      "type: test"
+    ],
+    "rulesetId": null
+  }
+}
